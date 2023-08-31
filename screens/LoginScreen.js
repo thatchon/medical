@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Button, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { firebase } from '../data/firebaseDB'
 
 const LoginScreen = ({ route, navigation }) => {
@@ -58,7 +58,7 @@ const LoginScreen = ({ route, navigation }) => {
     }
   return (
     <View style={styles.container}>
-      <Text>{roleText}</Text>
+      <Text style= {{fontSize : 64, marginBottom: "10%"}}>{roleText}</Text>
       <TextInput
         placeholder="ชื่อผู้ใช้งาน"
         value={email}
@@ -72,7 +72,20 @@ const LoginScreen = ({ route, navigation }) => {
         secureTextEntry
         style={styles.input}
       />
-      <Button title="Login" onPress={handleLogin} />
+      <TouchableOpacity
+        style={{
+          height: 63,
+          width: 216,
+          marginTop: "10%",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#05AB9F",
+          borderRadius: 30,
+        }}
+        onPress={handleLogin}
+      >
+        <Text style={{ fontSize: 28, color: 'white' }}>login</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -86,11 +99,12 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
+    height: '5%',
     marginVertical: 10,
     padding: 10,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 20,
   },
 });
 
