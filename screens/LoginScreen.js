@@ -25,7 +25,7 @@ const LoginScreen = ({ route, navigation }) => {
             if (doc.exists) {
               const userData = doc.data();
               if (userData.role === role) {
-                navigation.navigate('Home', { user: userData }); // นำผู้ใช้ไปยังหน้า HomeScreen พร้อมส่งข้อมูลผู้ใช้
+                navigation.navigate("Home", { user: userData }); // นำผู้ใช้ไปยังหน้า HomeScreen พร้อมส่งข้อมูลผู้ใช้
               } else {
                 setErrorMessage('บทบาทของผู้ใช้ไม่ตรงกับที่คุณเลือก');
                 console.log('บทบาทของผู้ใช้ไม่ตรงกับที่คุณเลือก');
@@ -84,7 +84,7 @@ const LoginScreen = ({ route, navigation }) => {
         }}
         onPress={handleLogin}
       >
-        <Text style={{ fontSize: 28, color: 'white' }}>login</Text>
+        <Text style={{ fontSize: 28, color: 'white' }}>Login</Text>
       </TouchableOpacity>
     </View>
   );
