@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, Button, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { firebase } from '../data/firebaseDB'
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { useDispatch } from 'react-redux';
+import { setUser, setRole } from '../redux/action'; // ปรับแต่ง action import
+import { auth, db } from '../data/firebaseDB';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs } from 'firebase/firestore';
 
 const LoginScreen = ({ route, navigation }) => {
-  const { role } = route.params; // รับค่า role จาก navigation
+  const { role } = route.params;
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = () => {
-    firebase.auth().signInWithEmailAndPassword(email, password)
+    signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
 
@@ -18,27 +23,35 @@ const LoginScreen = ({ route, navigation }) => {
         console.log('Login successful');
 
         // ดึงข้อมูลผู้ใช้จาก Firestore
-        firebase.firestore().collection('users')
-          .doc(user.uid) // ใช้ uid ของผู้ใช้เป็น Document ID
-          .get()
-          .then((doc) => {
-            if (doc.exists) {
-              const userData = doc.data();
-              if (userData.role === role) {
-                navigation.navigate("Home", { user: userData }); // นำผู้ใช้ไปยังหน้า HomeScreen พร้อมส่งข้อมูลผู้ใช้
-              } else {
-                setErrorMessage('บทบาทของผู้ใช้ไม่ตรงกับที่คุณเลือก');
-                console.log('บทบาทของผู้ใช้ไม่ตรงกับที่คุณเลือก');
+        const userRef = collection(db, 'users');
+        getDocs(userRef)
+          .then((querySnapshot) => {
+            let foundUser = null;
+
+            querySnapshot.forEach((doc) => {
+              if (doc.exists()) {
+                const userData = doc.data();
+                if (userData.role === role) {
+                  foundUser = userData;
+                }
               }
+            });
+
+            if (foundUser) {
+              // กำหนดข้อมูลผู้ใช้และบทบาทผ่าน Redux
+              dispatch(setUser(foundUser));
+              dispatch(setRole(role)); // ปรับแต่งบทบาทใหม่เมื่อ Login
+
+              // นำผู้ใช้ไปยังหน้า HomeScreen
+              navigation.navigate('Home');
             } else {
-              console.log('ไม่พบข้อมูลผู้ใช้ใน Firestore');
+              setErrorMessage('บทบาทของผู้ใช้ไม่ตรงกับที่คุณเลือก');
+              console.log('บทบาทของผู้ใช้ไม่ตรงกับที่คุณเลือก');
             }
           })
           .catch((error) => {
             console.error('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:', error);
           });
-
-        // ทำส่วนอื่น ๆ ที่คุณต้องการหลังจากเข้าสู่ระบบ
       })
       .catch((error) => {
         setErrorMessage('เข้าสู่ระบบไม่สำเร็จ');
@@ -46,19 +59,20 @@ const LoginScreen = ({ route, navigation }) => {
       });
   };
 
-    let roleText = ''; // ตัวแปรสำหรับเก็บข้อความบทบาท
-    if (role === 'student') {
-        roleText = 'นักศึกษาแพทย์';
-    } else if (role === 'doctor') {
-        roleText = 'แพทย์ประจำบ้าน';
-    } else if (role === 'teacher') {
-        roleText = 'อาจารย์';
-    } else if (role === 'staff') {
-        roleText = 'เจ้าหน้าที่';
-    }
+  let roleText = '';
+  if (role === 'student') {
+    roleText = 'นักศึกษาแพทย์';
+  } else if (role === 'doctor') {
+    roleText = 'แพทย์ประจำบ้าน';
+  } else if (role === 'teacher') {
+    roleText = 'อาจารย์';
+  } else if (role === 'staff') {
+    roleText = 'เจ้าหน้าที่';
+  }
+
   return (
     <View style={styles.container}>
-      <Text style= {{fontSize : 64, marginBottom: "10%"}}>{roleText}</Text>
+      <Text style={{ fontSize: 64, marginBottom: '10%' }}>{roleText}</Text>
       <TextInput
         placeholder="ชื่อผู้ใช้งาน"
         value={email}
@@ -76,16 +90,17 @@ const LoginScreen = ({ route, navigation }) => {
         style={{
           height: 63,
           width: 216,
-          marginTop: "10%",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#05AB9F",
+          marginTop: '10%',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#05AB9F',
           borderRadius: 30,
         }}
         onPress={handleLogin}
       >
         <Text style={{ fontSize: 28, color: 'white' }}>Login</Text>
       </TouchableOpacity>
+      <Text style={{ color: 'red', marginTop: '5%' }}>{errorMessage}</Text>
     </View>
   );
 };

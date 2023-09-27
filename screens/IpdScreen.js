@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from '../data/firebaseDB';
 import {
   Alert,
   Modal,
@@ -9,35 +11,70 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 function IpdScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [patientData, setPatientData] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null); // State เก็บข้อมูลของการ์ดที่ถูกคลิก
+
+  const loadPatientData = async () => {
+    try {
+      const patientCollectionRef = collection(db, "patients");
+      const querySnapshot = await getDocs(patientCollectionRef);
+      const patients = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.patientType === "inpatient") {
+          patients.push(data);
+        }
+      });
+
+      setPatientData(patients);
+    } catch (error) {
+      console.error("Error fetching patient data:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadPatientData();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      loadPatientData();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  const handleCardPress = (patient) => {
+    setSelectedPatient(patient);
+    setModalVisible(true);
+  };
 
   const handleAddData = () => {
-    // นำทางไปยังหน้า AddIpdScreen.js
     navigation.navigate("AddIpd");
   };
 
   const renderCards = () => {
-    // สร้างการ์ดแต่ละใบขึ้นมา
-    const cards = [];
-    for (let i = 0; i < 10; i++) {
-      cards.push(
-        <TouchableOpacity
-          style={styles.cardContainer}
-          key={i}
-          onPress={() => setModalVisible(true)}
-        >
-          <View style={styles.card}>
-            {/* ข้อมูลในการ์ด */}
-            <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}> HN : 0631542</Text>
-            <Text style={{marginLeft: 20, lineHeight: 30, opacity: 0.4 }}> อาจารย์ : เทสอาจารย์ เทสอาจารย์</Text>
-            <Text style={{marginLeft: 20, lineHeight: 30, opacity: 0.4 }}> Date : 8 พ.ย 2566</Text>
-          </View>
-        </TouchableOpacity>
-      );
-    }
-    return cards;
+    return patientData.map((patient, index) => (
+      <TouchableOpacity
+        style={styles.cardContainer}
+        key={index}
+        onPress={() => handleCardPress(patient)}
+      >
+        <View style={styles.card}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
+            HN : {patient.hn}
+          </Text>
+          <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+            อาจารย์ : {patient.professorName}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ));
   };
 
   return (
@@ -47,31 +84,48 @@ function IpdScreen({ navigation }) {
           {renderCards()}
           </ScrollView>
       </View>
-         {/* Modal */}
-          <Modal
-              animationType="slide"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => {
-                Alert.alert("Modal has been closed.");
-                setModalVisible(!modalVisible);
-              }}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert("Modal has been closed.");
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centerView}>
+          <View style={styles.modalView}>
+            {selectedPatient && (
+              <>
+                {/* <Text style={styles.modalText}>
+                  วันที่รับผู้ป่วย : {selectedPatient.admissionDate.toDateString()}
+                </Text> */}
+                <Text style={styles.modalText}>
+                  <Text style={{ fontWeight: "bold" }}>อาจารย์ผู้รับผิดชอบ : </Text> {selectedPatient.professorName}
+                </Text>
+                <Text style={styles.modalText}>
+                  <Text style={{ fontWeight: "bold" }}>HN :</Text> {selectedPatient.hn || "ไม่มี"}
+                </Text>
+                <Text style={styles.modalText}>
+                  <Text style={{ fontWeight: "bold" }}>Main Diagnosis : </Text> {selectedPatient.mainDiagnosis}
+                </Text>
+                <Text style={styles.modalText}>
+                  <Text style={{ fontWeight: "bold" }}>Co - Morbid Diseases : </Text> {selectedPatient.coMorbid || "ไม่มี"}
+                  </Text>
+                <Text style={styles.modalText}>
+                  <Text style={{ fontWeight: "bold" }}>Note/Reflection : </Text> {selectedPatient.note || "ไม่มี"}
+                  </Text>
+              </>
+            )}
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => setModalVisible(!modalVisible)}
             >
-              <View style={styles.modalView}>
-                  <Text style={styles.modalText}>วันที่รับผู้ป่วย : 8 มกราคม 2566</Text>
-                  <Text style={styles.modalText}>อาจารย์ผู้รับผิดชอบ : เทสอาจารย์ เทสอาจารย์</Text>
-                  <Text style={styles.modalText}>HN : 0631542</Text>
-                  <Text style={styles.modalText}>Main Diagnosis : Fever</Text>
-                  <Text style={styles.modalText}>Co-Mobid Diseases : ไม่มี</Text>
-                  <Text style={styles.modalText}>Note/reflection : ไม่มี</Text>
-                  <Pressable
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={() => setModalVisible(!modalVisible)}
-                  >
-                    <Text style={styles.textStyle}>Hide Modal</Text>
-                  </Pressable>
-                </View>
-            </Modal>
+              <Text style={styles.textStyle}>ปิดหน้าต่าง</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
       <View>
         <TouchableOpacity
           onPress={handleAddData}
@@ -97,8 +151,7 @@ function IpdScreen({ navigation }) {
           <Text style={{ fontSize: 22, color: "white" }}>เพิ่มข้อมูล</Text>
         </TouchableOpacity>
       </View>
-  </View>
-
+    </View>
   );
 }
 
@@ -107,7 +160,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     width: "100%",
     height: "100%",
-    paddingTop: 20, // ปรับระยะห่างด้านบน
+    paddingTop: 20,
   },
   boxCard: {
     backgroundColor: "white",
@@ -117,14 +170,14 @@ const styles = StyleSheet.create({
     marginTop: 50
   },
   cardContainer: {
-    width: "80%", // กำหนดความกว้างเท่ากับความกว้างเต็มจอ
+    width: "80%",
     alignItems: "left",
   },
   card: {
     width: 500,
     height: 150,
     marginTop: 20,
-    marginBottom: 20, // ปรับระยะห่างระหว่างการ์ด
+    marginBottom: 20,
     marginLeft: 10,
     borderRadius: 8,
     backgroundColor: "white",
@@ -176,10 +229,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   centerView: {
-    alignContent: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center'
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   }
 });
 

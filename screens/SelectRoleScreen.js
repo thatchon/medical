@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useDispatch } from 'react-redux';
+import { setRole } from '../redux/action';
 
 const SelectRoleScreen = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState(null);
@@ -20,7 +22,7 @@ const SelectRoleScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titletext}>เลือกหน้าที่ของคุณTest</Text>
+      <Text style={styles.titletext}>เลือกหน้าที่ของคุณ</Text>
 
       <TouchableOpacity
         style={[

@@ -1,6 +1,6 @@
-import firebase from 'firebase/compat/app'
-import 'firebase/compat/auth'
-import 'firebase/compat/firestore'
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -13,8 +13,8 @@ const firebaseConfig = {
   measurementId: "G-5NEPQ7NGGN"
 };
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig)
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-export { firebase };
+export { auth, db, app }; // Export Firebase Authentication instance and Firebase Firestore instance
