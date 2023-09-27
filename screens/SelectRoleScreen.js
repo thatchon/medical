@@ -20,7 +20,7 @@ const SelectRoleScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titletext}>เลือกหน้าที่ของคุณSDSD</Text>
+      <Text style={styles.titletext}>เลือกหน้าที่ของคุณTest</Text>
 
       <TouchableOpacity
         style={[
