@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { setRole } from '../redux/action';
+import { setRole } from '../redux/action'; // ตรงนี้ต้องแก้ import จาก reducers เป็น action
 
 const SelectRoleScreen = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState(null);
+  const dispatch = useDispatch();
 
   const handleRoleToggle = (role) => {
     if (selectedRole === role) {
@@ -16,6 +17,7 @@ const SelectRoleScreen = ({ navigation }) => {
 
   const handleContinue = () => {
     if (selectedRole) {
+      dispatch(setRole(selectedRole));
       navigation.navigate('Login', { role: selectedRole });
     }
   };
