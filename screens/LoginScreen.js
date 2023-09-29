@@ -90,7 +90,7 @@ const LoginScreen = ({ route, navigation }) => {
       <TouchableOpacity
         style={[
           styles.loginButton,
-          { backgroundColor: loggedInRole ? 'lightgray' : 'gray' },
+          { backgroundColor: loggedInRole ? '#05AB9F' : 'gray' },
         ]}
         onPress={handleLogin}
         

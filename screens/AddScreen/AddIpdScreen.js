@@ -3,7 +3,7 @@ import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput } from "rea
 import { SelectList } from "react-native-dropdown-select-list";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { db, auth } from '../../data/firebaseDB'
-import { getDocs, addDoc, collection } from "firebase/firestore";
+import { getDocs, addDoc, collection, query, where } from "firebase/firestore";
 
 function AddIpdScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -18,9 +18,10 @@ function AddIpdScreen() {
   const [note, setNote] = useState(""); // Note
   const status = "pending"; // Status
   const patientType = "inpatient"; // Patient Type
-  const professorName = null; // Professor Name
   const [createBy_id, setCreateById] = useState(null); // User ID
-  
+  const [professorId, setProfessorId] = useState(null); // สถานะสำหรับเก็บ id ของอาจารย์ที่ถูกเลือก
+  const [professorName, setProfessorName] = useState(null); // สถานะสำหรับเก็บชื่ออาจารย์ที่ถูกเลือก
+  const [teachers, setTeachers] = useState([]); // สถานะสำหรับเก็บรายการอาจารย์ทั้งหมด
 
   const showDatePicker = () => {
     setDatePickerVisibility(true);
@@ -35,6 +36,18 @@ function AddIpdScreen() {
     setSelectedDate(date);
     hideDatePicker();
   };
+
+  const onSelectTeacher = (selectedTeacherId) => {
+    const selectedTeacher = teachers.find(teacher => teacher.key === selectedTeacherId);
+    // console.log(selectedTeacher)
+    if (selectedTeacher) {
+        setProfessorName(selectedTeacher.value);
+        setProfessorId(selectedTeacher.key);
+    } else {
+        console.error('Teacher not found:', selectedTeacherId);
+    }
+}
+  
 
   useEffect(() => {
     async function fetchMainDiagnoses() {
@@ -59,6 +72,29 @@ function AddIpdScreen() {
     fetchMainDiagnoses();
   }, []);
 
+  useEffect(() => {
+    async function fetchTeachers() {
+      try {
+        const teacherRef = collection(db, "users");
+        const q = query(teacherRef, where("role", "==", "teacher")); // ใช้ query และ where ในการ filter
+  
+        const querySnapshot = await getDocs(q); // ใช้ query ที่ถูก filter ในการ getDocs
+        
+        const teacherArray = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          teacherArray.push({ key: doc.id, value: data.displayName });
+        });
+  
+        setTeachers(teacherArray); // ตั้งค่ารายการอาจารย์
+      } catch (error) {
+        console.error("Error fetching teachers:", error);
+      }
+    }
+  
+    fetchTeachers(); // เรียกฟังก์ชันเพื่อดึงข้อมูลอาจารย์
+  }, []);
+
   const saveDataToFirestore = async () => {
     try {
 
@@ -74,6 +110,11 @@ function AddIpdScreen() {
   
       if (!selectedDate) {
         alert("โปรดเลือกวันที่รับผู้ป่วย");
+        return;
+      }
+
+      if (!professorName) {
+        alert("โปรดเลือกอาจารย์");
         return;
       }
 
@@ -95,6 +136,7 @@ function AddIpdScreen() {
           patientType: patientType,
           professorName: professorName,
           status: status,
+          professorId: professorId,
           // Add more fields as needed
         });
 
@@ -149,7 +191,8 @@ function AddIpdScreen() {
         onConfirm={handleConfirm}
         onCancel={hideDatePicker}
       />
-      {/* <View style={{ marginBottom: 12 }}>
+
+      <View style={{ marginBottom: 12 }}>
         <Text style={{
           fontSize: 16,
           fontWeight: 400,
@@ -157,13 +200,12 @@ function AddIpdScreen() {
 
         }}>อาจารย์</Text>
         <SelectList
-          setSelected={setDiagnosis}
-          data={maindiagosis}
+          setSelected={onSelectTeacher}
+          data={teachers}
           placeholder={"เลือกชื่ออาจารย์"}
-          defaultOption={{ key: 'FE', value: 'Fever' }}
-
         />
-      </View> */}
+      </View>
+
       <View style={{ marginBottom: 12 }}>
         <Text style={{
           fontSize: 16,
@@ -202,7 +244,6 @@ function AddIpdScreen() {
           setSelected={setSelectedDiagnosis}
           data={mainDiagnoses}
           placeholder={"เลือกการวินิฉัย"}
-          defaultOption={mainDiagnoses[0]}
         />
       </View>
 
@@ -292,6 +333,14 @@ function AddIpdScreen() {
           alignItems: "center",
           backgroundColor: "#05AB9F",
           borderRadius: 30,
+          shadowColor: "#000",
+          shadowOffset: {
+            width: 0,
+            height: 2,
+          },
+          shadowOpacity: 0.25,
+          shadowRadius: 4,
+          elevation: 5,
         }}
         onPress={saveDataToFirestore}
       >

@@ -16,6 +16,7 @@ import AddOpdScreen from '../screens/AddScreen/AddOpdScreen';
 import AddActivityScreen from '../screens/AddScreen/AddActivityScreen'; 
 import AddProcedureScreen from '../screens/AddScreen/AddProcedureScreen'; 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HistoryScreen from '../screens/HistoryScreen';
 
 
 // สร้าง Stack Navigator สำหรับหน้า Login และ Home
@@ -73,6 +74,16 @@ function MainTabNavigator() {
           },
         }}/>
       <Tab.Screen name="รายงานผล" component={ReportScreen} options={{
+          headerStyle: {
+            backgroundColor: '#7274AE',
+          },
+          headerTintColor: '#fff',
+          headerTitleAlign: 'center',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}/>
+        <Tab.Screen name="ประวัติ" component={HistoryScreen} options={{
           headerStyle: {
             backgroundColor: '#7274AE',
           },
