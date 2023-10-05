@@ -23,6 +23,28 @@ function IpdScreen({ navigation }) {
   const currentUserUid = useSelector((state) => state.user.uid); // สมมติว่า uid เก็บอยู่ใน userUid ของ state
   const role = useSelector((state) => state.role);
 
+  const thaiMonths = [
+    'มกราคม',
+    'กุมภาพันธ์',
+    'มีนาคม',
+    'เมษายน',
+    'พฤษภาคม',
+    'มิถุนายน',
+    'กรกฎาคม',
+    'สิงหาคม',
+    'กันยายน',
+    'ตุลาคม',
+    'พฤศจิกายน',
+    'ธันวาคม'
+  ];
+  
+  const formatDateToThai = (date) => {
+    const day = date.getDate();
+    const month = date.getMonth();
+    const year = date.getFullYear() + 543; // เปลี่ยนจาก ค.ศ. เป็น พ.ศ.
+    return `${day} ${thaiMonths[month]} ${year}`;
+  };
+
   const loadPatientData = async () => {
     try {
       const patientCollectionRef = collection(db, "patients");
@@ -287,8 +309,11 @@ function IpdScreen({ navigation }) {
             {selectedPatient && (
               <>
                 {/* <Text style={styles.modalText}>
-                  วันที่รับผู้ป่วย : {selectedPatient.admissionDate.toDateString()}
+                  <Text style={{ fontWeight: "bold" }} วันที่รับผู้ป่วย :  </Text> {formatDateToThai(selectedPatient.admissionDate.toDate())}
                 </Text> */}
+                <Text style={styles.modalText}>
+                  <Text style={{ fontWeight: "bold" }}>วันที่รับผู้ป่วย : </Text> {formatDateToThai(selectedPatient.admissionDate.toDate())}
+                </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>อาจารย์ผู้รับผิดชอบ : </Text> {selectedPatient.professorName}
                 </Text>

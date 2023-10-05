@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Platform } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { db, auth } from '../../data/firebaseDB'
-import { getDocs, addDoc, collection, query, where } from "firebase/firestore";
+import { getDocs, addDoc, collection, query, where, Timestamp } from "firebase/firestore";
 
 function AddIpdScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -11,8 +11,6 @@ function AddIpdScreen() {
   const [selectedDiagnosis, setSelectedDiagnosis] = useState(""); // State for selected diagnosis
   const [mainDiagnoses, setMainDiagnoses] = useState([]); // State to store main diagnoses
   
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
   const [hn, setHN] = useState(""); // HN
   const [coMorbid, setCoMorbid] = useState(""); // Co-Morbid Diagnosis
   const [note, setNote] = useState(""); // Note
@@ -22,19 +20,45 @@ function AddIpdScreen() {
   const [professorId, setProfessorId] = useState(null); // สถานะสำหรับเก็บ id ของอาจารย์ที่ถูกเลือก
   const [professorName, setProfessorName] = useState(null); // สถานะสำหรับเก็บชื่ออาจารย์ที่ถูกเลือก
   const [teachers, setTeachers] = useState([]); // สถานะสำหรับเก็บรายการอาจารย์ทั้งหมด
+  const [date, setDate] = useState(new Date());
+  const [show, setShow] = useState(false);
 
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
+  const onChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShow(Platform.OS === "ios");
+    setDate(currentDate);
   };
 
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
+  const showDatepicker = () => {
+    setShow(true);
   };
 
-  const handleConfirm = (date) => {
-    // อัปเดต state เมื่อผู้ใช้เลือกวันที่ใหม่
-    setSelectedDate(date);
-    hideDatePicker();
+  const DateInput = () => {
+    if (Platform.OS === "web") {
+      return (
+        <input
+          type="date"
+          value={selectedDate.toISOString().substr(0, 10)}
+          onChange={(event) => setSelectedDate(new Date(event.target.value))}
+        />
+      );
+    } else {
+      return (
+        <>
+          <Button onPress={showDatepicker} title="Show date picker!" />
+          {show && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={date}
+              mode={"date"}
+              is24Hour={true}
+              display="default"
+              onChange={onChange}
+            />
+          )}
+        </>
+      );
+    }
   };
 
   const onSelectTeacher = (selectedTeacherId) => {
@@ -124,10 +148,10 @@ function AddIpdScreen() {
       // Check if a user is authenticated
       if (user) {
         const { uid } = user; 
-        
+        const timestamp = Timestamp.fromDate(selectedDate); // แปลง Date object เป็น Timestamp
         // Add a new document with a generated ID to a collection
         await addDoc(collection(db, "patients"), {
-          admissionDate: selectedDate,
+          admissionDate: timestamp,
           coMorbid: coMorbid, // Co-Morbid Diagnosis
           createBy_id: uid, // User ID
           hn: hn, // HN
@@ -163,34 +187,9 @@ function AddIpdScreen() {
   return (
     <View style={styles.container}>
       <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: 400,
-          marginVertical: 8,
-        }}>วันที่รับผู้ป่วย</Text>
+        <Text style={{ fontSize: 16, fontWeight: 400, marginVertical: 8 }}>วันที่รับผู้ป่วย</Text>
       </View>
-      <TouchableOpacity
-        onPress={showDatePicker}
-        style={{
-          width: '70%',
-          marginBottom: 12,
-          height: 48,
-          borderColor: 'black',
-          borderWidth: 1,
-          borderRadius: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingLeft: 22,
-        }}
-      >
-        <Text>{selectedDate.toDateString()}</Text>
-      </TouchableOpacity>
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleConfirm}
-        onCancel={hideDatePicker}
-      />
+      <DateInput />
 
       <View style={{ marginBottom: 12 }}>
         <Text style={{
