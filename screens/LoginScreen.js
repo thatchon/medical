@@ -98,6 +98,12 @@ const LoginScreen = ({ route, navigation }) => {
         <Text style={{ fontSize: 28, color: 'white' }}>Login</Text>
       </TouchableOpacity>
       <Text style={{ color: 'red', marginTop: 10 }}>{errorMessage}</Text>
+      <Text
+        style={styles.passwordResetLink}
+        onPress={() => navigation.navigate('ResetPassword')}
+      >
+        เปลี่ยนรหัสผ่าน
+      </Text>
     </View>
   );
 };
@@ -125,6 +131,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
   },
+  passwordResetLink: {
+    marginTop: 10,
+    color: 'blue',
+    textDecorationLine: 'underline',
+  }
 });
 
 export default LoginScreen;

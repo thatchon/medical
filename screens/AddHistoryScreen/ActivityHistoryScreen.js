@@ -9,29 +9,51 @@ import {
   Pressable
 } from "react-native";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { db } from '../data/firebaseDB';
+import { db } from '../../data/firebaseDB';
 import { useSelector } from "react-redux";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
-function HistoryScreen() {
+function ActivityHistoryScreen() {
     const currentUserUid = useSelector((state) => state.user.uid);
     const currentUserRole = useSelector((state) => state.user.role);
-    const [patientData, setPatientData] = useState([]);
+    const [activityData, setActivityData] = useState([]);
     const [filterStatus, setFilterStatus] = useState('approved');
-    const [selectedPatient, setSelectedPatient] = useState(null);
+    const [selectedActivity, setSelectedActivity] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
   
-    const handleCardPress = (patient) => {
-      setSelectedPatient(patient);
+    const thaiMonths = [
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม'
+    ];
+  
+    const formatDateToThai = (date) => {
+      const day = date.getDate();
+      const month = date.getMonth();
+      const year = date.getFullYear() + 543; // เปลี่ยนจาก ค.ศ. เป็น พ.ศ.
+      return `${day} ${thaiMonths[month]} ${year}`;
+    };
+
+    const handleCardPress = (activity) => {
+      setSelectedActivity(activity);
       setModalVisible(true);
     };
 
     const loadHistoryData = async () => {
       try {
-        const patientCollectionRef = collection(db, "patients");
+        const activityCollectionRef = collection(db, "activity");
         const userCollectionRef = collection(db, "users"); // เพิ่มรายการนี้เพื่ออ้างอิง collection ของผู้ใช้
-        const querySnapshot = await getDocs(patientCollectionRef);
-        const patients = [];
+        const querySnapshot = await getDocs(activityCollectionRef);
+        const activities = [];
       
         for (const docSnapshot of querySnapshot.docs) {
           const data = docSnapshot.data();
@@ -55,13 +77,13 @@ function HistoryScreen() {
     
           // ถ้าเป็น student ตรวจสอบ createBy_id หรือถ้าเป็น professor ตรวจสอบ professorId
           if ((data.createBy_id === currentUserUid || isProfessorRelated) && data.status === filterStatus) {
-            patients.push(displayData);
+            activities.push(displayData);
           }
         }
       
-        setPatientData(patients);
+        setActivityData(activities);
       } catch (error) {
-        console.error("Error fetching patient data:", error);
+        console.error("Error fetching activity data:", error);
       }
     };
   
@@ -72,33 +94,39 @@ function HistoryScreen() {
     
     
     const renderCards = () => {
-      return patientData
-        .filter(patient => patient.status === filterStatus) // กรองเฉพาะข้อมูลที่มีสถานะตรงกับ filterStatus
-        .map((patient, index) => (
+      return activityData
+      .filter(activity => activity.status === filterStatus)
+      .map((activity, index) => (
           <TouchableOpacity
             style={styles.cardContainer}
             key={index}
-            onPress={() => handleCardPress(patient)}
+            onPress={() => handleCardPress(activity)}
           >
             <View style={styles.card}>
               <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
-                HN : {patient.hn} ({patient.status})
+                ประเภท : {activity.activityType} ({activity.status})
               </Text>
               {currentUserRole === 'student' ? (
-                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                  อาจารย์ : {patient.professorName}
-                </Text>
+                <>
+                  <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                    อาจารย์ : {activity.professorName}
+                  </Text>
+                </>
               ) : (
                 <>
                   <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                    นักเรียน : {patient.studentName || "-"} {/* ใช้ || "-" เพื่อให้แสดง "-" ถ้าไม่มีข้อมูล */}
+                    นักเรียน : {activity.studentName || "-"} {/* ใช้ || "-" เพื่อให้แสดง "-" ถ้าไม่มีข้อมูล */}
                   </Text>
                 </>
               )}
+              <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                <FontAwesome name="calendar" size={20} color="black" /> {formatDateToThai(activity.admissionDate.toDate())}
+              </Text>
+
               <View style={{ position: 'absolute', bottom: 5, right: 5 }}>
-                {patient.status === 'approved' && <Ionicons name="checkmark-circle" size={24} color="green" />}
-                {patient.status === 'rejected' && <Ionicons name="close-circle" size={24} color="red" />}
-                {/* {patient.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
+                {activity.status === 'approved' && <Ionicons name="checkmark-circle" size={36} color="green" />}
+                {activity.status === 'rejected' && <Ionicons name="close-circle" size={36} color="red" />}
+                {/* {activity.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
               </View>
             </View>
           </TouchableOpacity>
@@ -107,10 +135,10 @@ function HistoryScreen() {
   
     return (
       <View style={styles.container}>
-        <TouchableOpacity onPress={() => setFilterStatus('approved')} style={styles.button}>
+        <TouchableOpacity onPress={() => setFilterStatus('approved')} style={styles.buttonApproved}>
           <Text style={styles.buttonText}>Approved</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setFilterStatus('rejected')} style={styles.button}>
+        <TouchableOpacity onPress={() => setFilterStatus('rejected')} style={styles.buttonRejected}>
           <Text style={styles.buttonText}>Rejected</Text>
         </TouchableOpacity>
         <ScrollView>
@@ -127,26 +155,26 @@ function HistoryScreen() {
     >
       <View style={styles.centerView}>
           <View style={styles.modalView}>
-            {selectedPatient && (
+            {selectedActivity && (
               <>
                 {/* <Text style={styles.modalText}>
-                  วันที่รับผู้ป่วย : {selectedPatient.admissionDate.toDateString()}
+                  วันที่รับผู้ป่วย : {selectedactivity.admissionDate.toDateString()}
                 </Text> */}
                 <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }}>อาจารย์ผู้รับผิดชอบ : </Text> {selectedPatient.professorName}
+                  <Text style={{ fontWeight: "bold" }}>วันที่รับผู้ป่วย : </Text> {formatDateToThai(selectedActivity.admissionDate.toDate())}
                 </Text>
                 <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }}>HN :</Text> {selectedPatient.hn || "ไม่มี"}
+                  <Text style={{ fontWeight: "bold" }}>อาจารย์ผู้รับผิดชอบ : </Text> {selectedActivity.professorName}
                 </Text>
                 <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }}>Main Diagnosis : </Text> {selectedPatient.mainDiagnosis}
+                  <Text style={{ fontWeight: "bold" }}>ประเภท :</Text> {selectedActivity.activityType || "ไม่มี"}
                 </Text>
                 <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }}>Co - Morbid Diseases : </Text> {selectedPatient.coMorbid || "ไม่มี"}
-                  </Text>
+                  <Text style={{ fontWeight: "bold" }}>Diagnosis : </Text> {selectedActivity.mainDiagnosis}
+                </Text>
                 <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }}>Note/Reflection : </Text> {selectedPatient.note || "ไม่มี"}
-                  </Text>
+                  <Text style={{ fontWeight: "bold" }}>Note/Reflection : </Text> {selectedActivity.note || "ไม่มี"}
+                </Text>
               </>
             )}
             <Pressable
@@ -168,6 +196,9 @@ const styles = StyleSheet.create({
       backgroundColor: 'white',
       padding: 20,
     },
+    textStyle: {
+      color: 'white'
+    },
     card: {
       backgroundColor: '#f0f0f0',
       padding: 20,
@@ -178,7 +209,19 @@ const styles = StyleSheet.create({
       fontSize: 16,
     },
     button: {
+      backgroundColor: '#05AB9F',
+      padding: 10,
+      marginBottom: 20,
+      borderRadius: 5,
+    },
+    buttonApproved: {
       backgroundColor: '#4CAF50',
+      padding: 10,
+      marginBottom: 20,
+      borderRadius: 5,
+    },
+    buttonRejected: {
+      backgroundColor: 'red',
       padding: 10,
       marginBottom: 20,
       borderRadius: 5,
@@ -230,4 +273,4 @@ const styles = StyleSheet.create({
     },
   });
 
-export default HistoryScreen;
+export default ActivityHistoryScreen;

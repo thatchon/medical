@@ -29,15 +29,15 @@ function OpdScreen({ navigation }) {
       const userCollectionRef = collection(db, "users");
       const querySnapshot = await getDocs(patientCollectionRef);
       const patients = [];
-  
+
       for (const docSnapshot of querySnapshot.docs) {
         const data = docSnapshot.data();
         data.id = docSnapshot.id; // กำหนด id ให้กับข้อมูลของผู้ป่วย
-  
+
         if (data.patientType === "outpatient") {
           let studentName = '';
           let displayData = data;
-  
+
           if (role === 'teacher' && data.createBy_id) {
             const userDocRef = doc(userCollectionRef, data.createBy_id);
             const userDocSnapshot = await getDoc(userDocRef);
@@ -47,14 +47,14 @@ function OpdScreen({ navigation }) {
               displayData = { ...data, studentName };
             }
           }
-  
-          if ((role === 'student' && data.createBy_id === currentUserUid) || 
-          (role === 'teacher' && data.professorId === currentUserUid)) {
+
+          if ((role === 'student' && data.createBy_id === currentUserUid) ||
+            (role === 'teacher' && data.professorId === currentUserUid)) {
             patients.push(displayData);
           }
         }
       }
-  
+
       setPatientData(patients);
     } catch (error) {
       console.error("Error fetching patient data:", error);
@@ -77,6 +77,9 @@ function OpdScreen({ navigation }) {
   const handleAddData = () => {
     navigation.navigate("AddOpd");
   };
+  const handleOpdHistory = () => {
+    navigation.navigate("OpdHistory");
+  }
 
   const handleApprove = async () => {
     try {
@@ -141,10 +144,10 @@ function OpdScreen({ navigation }) {
       const updates = patientData
         .filter((patient) => patient.status === 'pending')
         .map((patient) => updateDoc(doc(db, 'patients', patient.id), { status: 'approved' }));
-  
+
       // รอให้ทั้งหมดเสร็จสิ้น
       await Promise.all(updates);
-  
+
       // โหลดข้อมูลใหม่
       loadPatientData();
     } catch (error) {
@@ -185,55 +188,55 @@ function OpdScreen({ navigation }) {
 
   const renderCards = () => {
     return patientData
-    .filter(patient => patient.status === 'pending') // กรองเฉพาะข้อมูลที่มีสถานะเป็น pending
-    .map((patient, index) => (
-      <TouchableOpacity
-        style={styles.cardContainer}
-        key={index}
-        onPress={() => handleCardPress(patient)}
-      >
-        <View style={styles.card}>
-          <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
-            HN : {patient.hn} ({patient.status})
-          </Text>
-        
-          {role === 'student' ? (
-            <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-              อาจารย์ : {patient.professorName}
+      .filter(patient => patient.status === 'pending') // กรองเฉพาะข้อมูลที่มีสถานะเป็น pending
+      .map((patient, index) => (
+        <TouchableOpacity
+          style={styles.cardContainer}
+          key={index}
+          onPress={() => handleCardPress(patient)}
+        >
+          <View style={styles.card}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
+              HN : {patient.hn} ({patient.status})
             </Text>
-          ) : (
-            <>
+
+            {role === 'student' ? (
               <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                นักเรียน : {patient.studentName}
+                อาจารย์ : {patient.professorName}
               </Text>
-              <View style={styles.buttonsContainer}>
-              {patient.status === 'pending' && <>
-                <TouchableOpacity style={styles.approveButton} onPress={() => {
-                  setSelectedPatient(patient);
-                  setAction('approve');
-                  setConfirmationModalVisible(true);
-                }}>
-                  <Text style={styles.buttonText}>Approve</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.rejectButton} onPress={() => {
-                  setSelectedPatient(patient);
-                  setAction('reject');
-                  setConfirmationModalVisible(true);
-                }}>
-                  <Text style={styles.buttonText}>Reject</Text>
-                </TouchableOpacity>
-              </>}
+            ) : (
+              <>
+                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                  นักเรียน : {patient.studentName}
+                </Text>
+                <View style={styles.buttonsContainer}>
+                  {patient.status === 'pending' && <>
+                    <TouchableOpacity style={styles.approveButton} onPress={() => {
+                      setSelectedPatient(patient);
+                      setAction('approve');
+                      setConfirmationModalVisible(true);
+                    }}>
+                      <Text style={styles.buttonText}>Approve</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.rejectButton} onPress={() => {
+                      setSelectedPatient(patient);
+                      setAction('reject');
+                      setConfirmationModalVisible(true);
+                    }}>
+                      <Text style={styles.buttonText}>Reject</Text>
+                    </TouchableOpacity>
+                  </>}
+                </View>
+              </>
+            )}
+            <View style={{ position: 'absolute', bottom: 5, right: 5 }}>
+              {patient.status === 'approved' && <Ionicons name="checkmark-circle" size={24} color="green" />}
+              {patient.status === 'rejected' && <Ionicons name="close-circle" size={24} color="red" />}
+              {/* {patient.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
             </View>
-            </>
-          )}
-          <View style={{ position: 'absolute', bottom: 5, right: 5 }}>
-          {patient.status === 'approved' && <Ionicons name="checkmark-circle" size={24} color="green" />}
-          {patient.status === 'rejected' && <Ionicons name="close-circle" size={24} color="red" />}
-          {/* {patient.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
-        </View>
-        </View>
-      </TouchableOpacity>
-    ));
+          </View>
+        </TouchableOpacity>
+      ));
   };
 
   return (
@@ -267,12 +270,12 @@ function OpdScreen({ navigation }) {
       </Modal>
 
       <View style={styles.boxCard}>
-          <ScrollView>
+        <ScrollView>
           {renderCards()}
-          </ScrollView>
+        </ScrollView>
       </View>
 
-              {/*  Modal สำหรับแสดงข้อมูลในการ์ด */}
+      {/*  Modal สำหรับแสดงข้อมูลในการ์ด */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -300,10 +303,10 @@ function OpdScreen({ navigation }) {
                 </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>Co - Morbid Diseases : </Text> {selectedPatient.coMorbid || "ไม่มี"}
-                  </Text>
+                </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>Note/Reflection : </Text> {selectedPatient.note || "ไม่มี"}
-                  </Text>
+                </Text>
               </>
             )}
             <Pressable
@@ -316,8 +319,33 @@ function OpdScreen({ navigation }) {
         </View>
       </Modal>
       <View>
-      {renderAddDataButton()}
+        {renderAddDataButton()}
       </View>
+      {/* <View>
+        <TouchableOpacity
+          onPress={handleOpdHistory}
+          style={{
+            height: 37,
+            width: 174,
+            marginTop: 20,
+            marginLeft: 50,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#05AB9F",
+            borderRadius: 59,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          <Text style={{ fontSize: 22, color: "white" }}>ประวัติ</Text>
+        </TouchableOpacity>
+      </View> */}
     </View>
   );
 }
@@ -407,18 +435,18 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   approveButton: {
-      backgroundColor: "green",
-      padding: 10,
-      borderRadius: 13,
-      marginRight: 5
+    backgroundColor: "green",
+    padding: 10,
+    borderRadius: 13,
+    marginRight: 5
   },
   rejectButton: {
-      backgroundColor: "red",
-      padding: 10,
-      borderRadius: 13,
+    backgroundColor: "red",
+    padding: 10,
+    borderRadius: 13,
   },
   buttonText: {
-      color: "white"
+    color: "white"
   },
   icon: {
     position: 'absolute',

@@ -29,32 +29,32 @@ function ProcedureScreen({ navigation }) {
       const userCollectionRef = collection(db, "users");
       const querySnapshot = await getDocs(procedureCollectionRef);
       const procedures = [];
-  
+
       for (const docSnapshot of querySnapshot.docs) {
         const data = docSnapshot.data();
         data.id = docSnapshot.id; // กำหนด id ให้กับข้อมูลของผู้ป่วย
-  
+
         // if (data.procedureType === "inprocedure") {
-          let studentName = '';
-          let displayData = data;
-  
-          if (role === 'teacher' && data.createBy_id) {
-            const userDocRef = doc(userCollectionRef, data.createBy_id);
-            const userDocSnapshot = await getDoc(userDocRef);
-            if (userDocSnapshot.exists()) {
-              const userData = userDocSnapshot.data();
-              studentName = userData.displayName || '';
-              displayData = { ...data, studentName };
-            }
-          }
-  
-          if ((role === 'student' && data.createBy_id === currentUserUid) || 
-          (role === 'teacher' && data.approvedById === currentUserUid)) {
-            procedures.push(displayData);
+        let studentName = '';
+        let displayData = data;
+
+        if (role === 'teacher' && data.createBy_id) {
+          const userDocRef = doc(userCollectionRef, data.createBy_id);
+          const userDocSnapshot = await getDoc(userDocRef);
+          if (userDocSnapshot.exists()) {
+            const userData = userDocSnapshot.data();
+            studentName = userData.displayName || '';
+            displayData = { ...data, studentName };
           }
         }
+
+        if ((role === 'student' && data.createBy_id === currentUserUid) ||
+          (role === 'teacher' && data.approvedById === currentUserUid)) {
+          procedures.push(displayData);
+        }
+      }
       // }
-  
+
       setProcedureData(procedures);
     } catch (error) {
       console.error("Error fetching procedure data:", error);
@@ -76,6 +76,9 @@ function ProcedureScreen({ navigation }) {
 
   const handleAddData = () => {
     navigation.navigate("AddProcedure");
+  };
+  const handleProcedureHistory = () => {
+    navigation.navigate("ProcedureHistory");
   };
 
   const handleApprove = async () => {
@@ -141,10 +144,10 @@ function ProcedureScreen({ navigation }) {
       const updates = procedureData
         .filter((procedure) => procedure.status === 'pending')
         .map((procedure) => updateDoc(doc(db, 'procedures', procedure.id), { status: 'approved' }));
-  
+
       // รอให้ทั้งหมดเสร็จสิ้น
       await Promise.all(updates);
-  
+
       // โหลดข้อมูลใหม่
       loadProcedureData();
     } catch (error) {
@@ -195,58 +198,58 @@ function ProcedureScreen({ navigation }) {
 
   const renderCards = () => {
     return procedureData
-    .filter(procedure => procedure.status === 'pending') // กรองเฉพาะข้อมูลที่มีสถานะเป็น pending
-    .map((procedure, index) => (
-      <TouchableOpacity
-        style={styles.cardContainer}
-        key={index}
-        onPress={() => handleCardPress(procedure)}
-      >
-        <View style={styles.card}>
-          <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
-            HN : {procedure.hn} ({procedure.status})
-          </Text>
-        
-          {role === 'student' ? (
-            <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-              อาจารย์ : {procedure.approvedByName}
+      .filter(procedure => procedure.status === 'pending') // กรองเฉพาะข้อมูลที่มีสถานะเป็น pending
+      .map((procedure, index) => (
+        <TouchableOpacity
+          style={styles.cardContainer}
+          key={index}
+          onPress={() => handleCardPress(procedure)}
+        >
+          <View style={styles.card}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
+              HN : {procedure.hn} ({procedure.status})
             </Text>
-          ) : (
-            <>
+
+            {role === 'student' ? (
               <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                นักเรียน : {procedure.studentName}
+                อาจารย์ : {procedure.approvedByName}
               </Text>
-              <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                ประเภท : {procedure.procedureType}
-              </Text>
-              <View style={styles.buttonsContainer}>
-              {procedure.status === 'pending' && <>
-                <TouchableOpacity style={styles.approveButton} onPress={() => {
-                  setSelectedProcedure(procedure);
-                  setAction('approve');
-                  setConfirmationModalVisible(true);
-                }}>
-                  <Text style={styles.buttonText}>Approve</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.rejectButton} onPress={() => {
-                  setSelectedProcedure(procedure);
-                  setAction('reject');
-                  setConfirmationModalVisible(true);
-                }}>
-                  <Text style={styles.buttonText}>Reject</Text>
-                </TouchableOpacity>
-              </>}
+            ) : (
+              <>
+                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                  นักเรียน : {procedure.studentName}
+                </Text>
+                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                  ประเภท : {procedure.procedureType}
+                </Text>
+                <View style={styles.buttonsContainer}>
+                  {procedure.status === 'pending' && <>
+                    <TouchableOpacity style={styles.approveButton} onPress={() => {
+                      setSelectedProcedure(procedure);
+                      setAction('approve');
+                      setConfirmationModalVisible(true);
+                    }}>
+                      <Text style={styles.buttonText}>Approve</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.rejectButton} onPress={() => {
+                      setSelectedProcedure(procedure);
+                      setAction('reject');
+                      setConfirmationModalVisible(true);
+                    }}>
+                      <Text style={styles.buttonText}>Reject</Text>
+                    </TouchableOpacity>
+                  </>}
+                </View>
+              </>
+            )}
+            <View style={{ position: 'absolute', bottom: 5, right: 5 }}>
+              {procedure.status === 'approved' && <Ionicons name="checkmark-circle" size={24} color="green" />}
+              {procedure.status === 'rejected' && <Ionicons name="close-circle" size={24} color="red" />}
+              {/* {procedure.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
             </View>
-            </>
-          )}
-          <View style={{ position: 'absolute', bottom: 5, right: 5 }}>
-          {procedure.status === 'approved' && <Ionicons name="checkmark-circle" size={24} color="green" />}
-          {procedure.status === 'rejected' && <Ionicons name="close-circle" size={24} color="red" />}
-          {/* {procedure.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
-        </View>
-        </View>
-      </TouchableOpacity>
-    ));
+          </View>
+        </TouchableOpacity>
+      ));
   };
 
   return (
@@ -280,12 +283,12 @@ function ProcedureScreen({ navigation }) {
       </Modal>
 
       <View style={styles.boxCard}>
-          <ScrollView>
+        <ScrollView>
           {renderCards()}
-          </ScrollView>
+        </ScrollView>
       </View>
 
-              {/*  Modal สำหรับแสดงข้อมูลในการ์ด */}
+      {/*  Modal สำหรับแสดงข้อมูลในการ์ด */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -313,10 +316,10 @@ function ProcedureScreen({ navigation }) {
                 </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>Level : </Text> {displayLevel(selectedProcedure.procedureLevel)}
-                  </Text>
+                </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>หมายเหตุ : </Text> {selectedProcedure.remarks || "ไม่มี"}
-                  </Text>
+                </Text>
               </>
             )}
             <Pressable
@@ -329,8 +332,33 @@ function ProcedureScreen({ navigation }) {
         </View>
       </Modal>
       <View>
-      {renderAddDataButton()}
+        {renderAddDataButton()}
       </View>
+      {/* <View>
+        <TouchableOpacity
+          onPress={handleProcedureHistory}
+          style={{
+            height: 37,
+            width: 174,
+            marginTop: 20,
+            marginLeft: 50,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#05AB9F",
+            borderRadius: 59,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          <Text style={{ fontSize: 22, color: "white" }}>ประวัติ</Text>
+        </TouchableOpacity>
+      </View> */}
     </View>
   );
 }
@@ -420,18 +448,18 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   approveButton: {
-      backgroundColor: "green",
-      padding: 10,
-      borderRadius: 13,
-      marginRight: 5
+    backgroundColor: "green",
+    padding: 10,
+    borderRadius: 13,
+    marginRight: 5
   },
   rejectButton: {
-      backgroundColor: "red",
-      padding: 10,
-      borderRadius: 13,
+    backgroundColor: "red",
+    padding: 10,
+    borderRadius: 13,
   },
   buttonText: {
-      color: "white"
+    color: "white"
   },
   icon: {
     position: 'absolute',
