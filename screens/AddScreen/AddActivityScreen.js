@@ -38,6 +38,11 @@ function AddActivityScreen() {
       return (
         <input
           type="date"
+          style={{
+            marginTop: 5,
+            padding: 10,
+            fontSize: 16
+          }}
           value={selectedDate.toISOString().substr(0, 10)}
           onChange={(event) => setSelectedDate(new Date(event.target.value))}
         />
@@ -209,15 +214,22 @@ function AddActivityScreen() {
   return (
     <View style={styles.container}>
       <View style={{ marginBottom: 12 }}>
-        <Text style={{ fontSize: 16, fontWeight: 400, marginVertical: 8 }}>วันที่รับผู้ป่วย</Text>
+        <Text style={{
+          fontSize: 24,
+          fontWeight: 400,
+          marginVertical: 8,
+          textAlign: 'center'
+
+        }}>วันที่รับผู้ป่วย</Text>
+        <DateInput />
       </View>
-      <DateInput />
 
       <View style={{ marginBottom: 12 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
 
         }}>ประเภท</Text>
         <SelectList
@@ -229,9 +241,10 @@ function AddActivityScreen() {
 
       <View style={{ marginBottom: 12 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
 
         }}>อาจารย์</Text>
         <SelectList
@@ -243,9 +256,10 @@ function AddActivityScreen() {
 
       <View style={{ marginBottom: 12 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
 
         }}>Main Diagnosis</Text>
         <SelectList
@@ -255,23 +269,21 @@ function AddActivityScreen() {
         />
       </View>
 
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 12, width: '70%' }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
 
         }}>Note / Reflection (optional)</Text>
-      </View>
       <View style={{
-        width: '70%',
         height: 260,
         borderColor: 'black',
         borderWidth: 1,
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingLeft: 22
       }}>
         <TextInput
           placeholder="กรอกรายละเอียด"
@@ -279,9 +291,11 @@ function AddActivityScreen() {
           onChangeText={setNote}
           style={{
             width: '100%',
-            height: '100%'
+            height: '100%',
+            textAlign: 'center'
           }}
         ></TextInput>
+        </View>
       </View>
 
       <TouchableOpacity

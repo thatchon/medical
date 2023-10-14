@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Platform } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { db, auth } from '../../data/firebaseDB'
-import { getDocs, addDoc, collection, query, where } from "firebase/firestore";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { db, auth, storage } from '../../data/firebaseDB'
+import { getDocs, addDoc, collection, query, where, Timestamp } from "firebase/firestore";
+import { useDropzone } from 'react-dropzone';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
 function AddOpdScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -22,21 +25,82 @@ function AddOpdScreen() {
   const [professorId, setProfessorId] = useState(null); // สถานะสำหรับเก็บ id ของอาจารย์ที่ถูกเลือก
   const [professorName, setProfessorName] = useState(null); // สถานะสำหรับเก็บชื่ออาจารย์ที่ถูกเลือก
   const [teachers, setTeachers] = useState([]); // สถานะสำหรับเก็บรายการอาจารย์ทั้งหมด
+  const [date, setDate] = useState(new Date());
+  const [show, setShow] = useState(false);
 
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState('');
+
+  const onChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShow(Platform.OS === "ios");
+    setDate(currentDate);
   };
 
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
+  const showDatepicker = () => {
+    setShow(true);
   };
 
-  const handleConfirm = (date) => {
-    // อัปเดต state เมื่อผู้ใช้เลือกวันที่ใหม่
-    setSelectedDate(date);
-    hideDatePicker();
+  const DateInput = () => {
+    if (Platform.OS === "web") {
+      return (
+        <input
+          type="date"
+          style={{
+            marginTop: 5,
+            padding: 10,
+            fontSize: 16
+          }}
+          value={selectedDate.toISOString().substr(0, 10)}
+          onChange={(event) => setSelectedDate(new Date(event.target.value))}
+        />
+      );
+    } else {
+      return (
+        <>
+          <Button onPress={showDatepicker} title="Show date picker!" />
+          {show && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={date}
+                mode={"date"}
+                is24Hour={true}
+                display="default"
+                onChange={onChange}
+              />
+          )}
+        </>
+      );
+    }
+  };
+  const onDrop = acceptedFiles => {
+    // Check if the uploaded file is a PDF
+    if (acceptedFiles[0].type !== 'application/pdf') {
+      alert('กรุณาอัปโหลดเฉพาะไฟล์ PDF');
+      return;
+    }
+    setPdfFile(acceptedFiles[0]);
   };
 
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: 'application/pdf'
+  });
+  
+  const uploadPdfToStorage = async () => {
+    if (!pdfFile) return null;
+  
+    try {
+      const storageRef = ref(storage, 'pdfs/' + pdfFile.name);
+      await uploadBytes(storageRef, pdfFile);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading PDF to Firebase Storage:", error);
+      alert("เกิดข้อผิดพลาดในการอัปโหลดไฟล์ PDF");
+      return null;
+    }
+};
   const onSelectTeacher = (selectedTeacherId) => {
     const selectedTeacher = teachers.find(teacher => teacher.key === selectedTeacherId);
     // console.log(selectedTeacher)
@@ -117,17 +181,15 @@ function AddOpdScreen() {
         alert("โปรดเลือกอาจารย์");
         return;
       }
-
-      // Get the currently authenticated user
       const user = auth.currentUser;
-    
-      // Check if a user is authenticated
+      const uploadedPdfUrl = await uploadPdfToStorage();
+
       if (user) {
         const { uid } = user; 
-        
+        const timestamp = Timestamp.fromDate(selectedDate); 
         // Add a new document with a generated ID to a collection
         await addDoc(collection(db, "patients"), {
-          admissionDate: selectedDate,
+          admissionDate: timestamp,
           coMorbid: coMorbid, // Co-Morbid Diagnosis
           createBy_id: uid, // User ID
           hn: hn, // HN
@@ -137,6 +199,7 @@ function AddOpdScreen() {
           professorName: professorName,
           status: status,
           professorId: professorId,
+          pdfUrl: uploadedPdfUrl || "",
           // Add more fields as needed
         });
 
@@ -146,7 +209,8 @@ function AddOpdScreen() {
         setSelectedDiagnosis("");
         setCoMorbid("");
         setNote("");
-
+        setPdfFile(null);
+        console.log("Download URL:", pdfUrl);
         // Display a success message or perform any other action
         alert("บันทึกข้อมูลสำเร็จ");
       } else {
@@ -162,41 +226,24 @@ function AddOpdScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
-        }}>วันที่รับผู้ป่วย</Text>
-      </View>
-      <TouchableOpacity
-        onPress={showDatePicker}
-        style={{
-          width: '70%',
-          marginBottom: 12,
-          height: 48,
-          borderColor: 'black',
-          borderWidth: 1,
-          borderRadius: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingLeft: 22,
-        }}
-      >
-        <Text>{selectedDate.toDateString()}</Text>
-      </TouchableOpacity>
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleConfirm}
-        onCancel={hideDatePicker}
-      />
+          textAlign: 'center'
 
-      <View style={{ marginBottom: 12 }}>
+        }}>วันที่รับผู้ป่วย</Text>
+        <DateInput />
+      </View>
+
+
+      <View style={{ marginBottom: 16 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
 
         }}>อาจารย์</Text>
         <SelectList
@@ -206,40 +253,42 @@ function AddOpdScreen() {
         />
       </View>
 
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16, width: '70%'}}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>HN</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={hn}
-          onChangeText={setHN}
-          style={{
-            width: '100%'
-          }}
-        ></TextInput>
+        <View style={{
+          height: 48,
+          borderColor: 'black',
+          borderWidth: 1,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <TextInput
+            placeholder="กรอกรายละเอียด"
+            value={hn}
+            onChangeText={setHN}
+            style={{
+              width: '100%',
+              textAlign: 'center'
+            }}
+          ></TextInput>
+        </View>
       </View>
 
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>Main Diagnosis</Text>
-        {/* เราสมมติว่า mainDiagnoses เป็น array ที่มีค่าในรูปแบบ { key, value } */}
         <SelectList
           setSelected={setSelectedDiagnosis}
           data={mainDiagnoses}
@@ -247,80 +296,91 @@ function AddOpdScreen() {
         />
       </View>
 
-      {/* <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="เพิ่มการวินิฉัยอื่นๆ"
-
-          style={{
-            width: '100%'
-          }}
-        ></TextInput>
-
-
-      </View> */}
-
-<View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16, width: '70%' }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>Co-Morbid Diagnosis</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={coMorbid}
-          onChangeText={setCoMorbid}
-          style={{
-            width: '100%'
-          }}
-        ></TextInput>
-      </View>
-
-      <View style={{ marginBottom: 12 }}>
+          <View style={{
+            height: 48,
+            borderColor: 'black',
+            borderWidth: 1,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <TextInput
+              placeholder="กรอกรายละเอียด"
+              value={coMorbid}
+              onChangeText={setCoMorbid}
+              style={{
+                width: '100%',
+                textAlign: 'center'
+              }}
+            ></TextInput>
+          </View>
+        </View>
+        
+      <View style={{ marginBottom: 16, width: '70%' }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>Note / Reflection (optional)</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 260,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={note}
-          onChangeText={setNote}
-          style={{
-            width: '100%',
-            height: '100%'
+          <View style={{
+            height: 260,
+            borderColor: 'black',
+            borderWidth: 1,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <TextInput
+              placeholder="กรอกรายละเอียด"
+              value={note}
+              onChangeText={setNote}
+              style={{
+                width: '100%',
+                height: '100%',
+                textAlign: 'center'
+              }}
+            ></TextInput>
+          </View>
+        </View>
+
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>อัปโหลดไฟล์ PDF</Text>
+        <View 
+          {...getRootProps({ className: 'dropzone' })}
+          style={{ 
+            height: 50,
+            borderColor: 'gray',
+            borderWidth: 1,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row'
           }}
-        ></TextInput>
+        >
+          <input {...getInputProps()} />
+          <FontAwesome name="upload" size={24} color="black" />
+          <Text style={{ marginLeft: 10 }}>
+            {
+              pdfFile ? pdfFile.name : 'Import PDF only.'
+            }
+          </Text>
+        </View>
       </View>
 
       <TouchableOpacity
@@ -349,7 +409,6 @@ function AddOpdScreen() {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

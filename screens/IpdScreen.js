@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useSelector } from "react-redux";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
 function IpdScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,6 +22,8 @@ function IpdScreen({ navigation }) {
   const [action, setAction] = useState(null); // ตัวแปรสำหรับเก็บว่า user กำลังทำงานอะไร หรือกดปุ่มไหน
   const currentUserUid = useSelector((state) => state.user.uid); // สมมติว่า uid เก็บอยู่ใน userUid ของ state
   const role = useSelector((state) => state.role);
+
+  const [isApproveAllModalVisible, setApproveAllModalVisible] = useState(false);
 
   const thaiMonths = [
     'มกราคม',
@@ -99,9 +101,6 @@ function IpdScreen({ navigation }) {
   const handleAddData = () => {
     navigation.navigate("AddIpd");
   };
-  const handleIpdHistory = () => {
-    navigation.navigate('IpdHistory')
-  }
 
   const handleApprove = async () => {
     try {
@@ -160,7 +159,7 @@ function IpdScreen({ navigation }) {
     return null;
   };
 
-  const handleApproveAll = async () => {
+  const handleActualApproveAll = async () => {
     try {
       // ประมวลผลทั้งหมดที่มีสถานะเป็น pending
       const updates = patientData
@@ -175,6 +174,10 @@ function IpdScreen({ navigation }) {
     } catch (error) {
       console.error("Error approving all patients:", error);
     }
+  };
+
+  const handleApproveAll = () => {
+    setApproveAllModalVisible(true);
   };
 
   const renderApprovedButton = () => {
@@ -210,7 +213,7 @@ function IpdScreen({ navigation }) {
 
   const renderCards = () => {
     return patientData
-      .filter(patient => patient.status === 'pending') // กรองเฉพาะข้อมูลที่มีสถานะเป็น pending
+      .filter(patient => patient.status === 'pending') 
       .map((patient, index) => (
         <TouchableOpacity
           style={styles.cardContainer}
@@ -218,44 +221,57 @@ function IpdScreen({ navigation }) {
           onPress={() => handleCardPress(patient)}
         >
           <View style={styles.card}>
-            <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
-              HN : {patient.hn} ({patient.status})
-            </Text>
-
-            {role === 'student' ? (
-              <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                อาจารย์ : {patient.professorName}
-              </Text>
-            ) : (
-              <>
-                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                  นักเรียน : {patient.studentName}
-                </Text>
-                <View style={styles.buttonsContainer}>
-                  {patient.status === 'pending' && <>
-                    <TouchableOpacity style={styles.approveButton} onPress={() => {
-                      setSelectedPatient(patient);
-                      setAction('approve');
-                      setConfirmationModalVisible(true);
-                    }}>
-                      <Text style={styles.buttonText}>Approve</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.rejectButton} onPress={() => {
-                      setSelectedPatient(patient);
-                      setAction('reject');
-                      setConfirmationModalVisible(true);
-                    }}>
-                      <Text style={styles.buttonText}>Reject</Text>
-                    </TouchableOpacity>
-                  </>}
-                </View>
-              </>
-            )}
-            <View style={{ position: 'absolute', bottom: 5, right: 5 }}>
-              {patient.status === 'approved' && <Ionicons name="checkmark-circle" size={24} color="green" />}
-              {patient.status === 'rejected' && <Ionicons name="close-circle" size={24} color="red" />}
-              {/* {patient.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
+            <View style={styles.leftContainer}>
+              {role === 'student' ? (
+                <>
+                  <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
+                    HN : {patient.hn} ({patient.status})
+                  </Text>
+                  <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                    อาจารย์ : {patient.professorName}
+                  </Text>
+                  <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                    <FontAwesome name="calendar" size={20} color="black" /> {formatDateToThai(patient.admissionDate.toDate())}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30, marginTop: 20 }}>
+                    HN : {patient.hn} ({patient.status})
+                  </Text>
+                  <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                    นักเรียน : {patient.studentName}
+                  </Text>
+                  <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                    <FontAwesome name="calendar" size={20} color="black" /> {formatDateToThai(patient.admissionDate.toDate())}
+                  </Text>
+                </>
+              )}
             </View>
+            {role !== 'student' && (
+              <View style={styles.rightContainer}>
+                <View style={styles.buttonsContainer}>
+                  {patient.status === 'pending' && (
+                    <>
+                      <TouchableOpacity style={styles.approveButton} onPress={() => {
+                        setSelectedPatient(patient);
+                        setAction('approve');
+                        setConfirmationModalVisible(true);
+                      }}>
+                        <Text style={styles.buttonText}>Approve</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.rejectButton} onPress={() => {
+                        setSelectedPatient(patient);
+                        setAction('reject');
+                        setConfirmationModalVisible(true);
+                      }}>
+                        <Text style={styles.buttonText}>Reject</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       ));
@@ -266,30 +282,64 @@ function IpdScreen({ navigation }) {
       {renderApprovedButton()}
       {/* Modal สำหรับยืนยัน Approve/Reject */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={confirmationModalVisible}
-      >
-        <View style={styles.centerView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>ยืนยันการ{action === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ'}</Text>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => {
-                action === 'approve' ? handleApprove() : handleReject();
-              }}
-            >
-              <Text style={styles.textStyle}>ยืนยัน</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setConfirmationModalVisible(false)}
-            >
-              <Text style={styles.textStyle}>ยกเลิก</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+              animationType="fade"
+              transparent={true}
+              visible={confirmationModalVisible}
+          >
+              <View style={styles.centerView}>
+                  <View style={styles.modalView}>
+                  <Text style={styles.modalText}>ยืนยันการ<Text style={{ fontWeight: "bold", fontSize: 20 }}>{action === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ'}</Text></Text>
+                      
+                      <View style={styles.buttonContainer}>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonApprove]}
+                              onPress={() => {
+                                  action === 'approve' ? handleApprove() : handleReject();
+                              }}
+                          >
+                              <Text style={styles.textStyle}>ยืนยัน</Text>
+                          </Pressable>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonCancel]}
+                              onPress={() => setConfirmationModalVisible(false)}
+                          >
+                              <Text style={styles.textStyle}>ยกเลิก</Text>
+                          </Pressable>
+                      </View>
+                  </View>
+              </View>
+          </Modal>
+
+      {/* Modal สำหรับยืนยัน ApproveAll */}
+      <Modal
+              animationType="fade"
+              transparent={true}
+              visible={isApproveAllModalVisible}
+          >
+              <View style={styles.centerView}>
+                  <View style={styles.modalView}>
+                  <Text style={styles.modalText}>ยืนยันการอนุมัติ<Text style={{ fontWeight: "bold", fontSize: 20 }}>ทั้งหมด?</Text></Text>
+                      
+                      <View style={styles.buttonContainer}>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonApprove]}
+                              onPress={() => {
+                                handleActualApproveAll();
+                                setApproveAllModalVisible(false);
+                              }}
+                          >
+                              <Text style={styles.textStyle}>ยืนยัน</Text>
+                          </Pressable>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonCancel]}
+                              onPress={() => setApproveAllModalVisible(false)}
+                          >
+                              <Text style={styles.textStyle}>ยกเลิก</Text>
+                          </Pressable>
+                      </View>
+                  </View>
+              </View>
+          </Modal>
 
       <View style={styles.boxCard}>
         <ScrollView>
@@ -299,7 +349,7 @@ function IpdScreen({ navigation }) {
 
       {/*  Modal สำหรับแสดงข้อมูลในการ์ด */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
@@ -311,9 +361,6 @@ function IpdScreen({ navigation }) {
           <View style={styles.modalView}>
             {selectedPatient && (
               <>
-                {/* <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }} วันที่รับผู้ป่วย :  </Text> {formatDateToThai(selectedPatient.admissionDate.toDate())}
-                </Text> */}
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>วันที่รับผู้ป่วย : </Text> {formatDateToThai(selectedPatient.admissionDate.toDate())}
                 </Text>
@@ -347,31 +394,6 @@ function IpdScreen({ navigation }) {
         {renderAddDataButton()}
 
       </View>
-      {/* <View>
-        <TouchableOpacity
-          onPress={handleIpdHistory}
-          style={{
-            height: 37,
-            width: 174,
-            marginTop: 20,
-            marginLeft: 50,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#05AB9F",
-            borderRadius: 59,
-            shadowColor: "#000",
-            shadowOffset: {
-              width: 0,
-              height: 2,
-            },
-            shadowOpacity: 0.25,
-            shadowRadius: 4,
-            elevation: 5,
-          }}
-        >
-          <Text style={{ fontSize: 22, color: "white" }}>ประวัติ</Text>
-        </TouchableOpacity>
-      </View> */}
     </View>
   );
 }
@@ -431,14 +453,16 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   button: {
-    borderRadius: 20,
+    backgroundColor: '#05AB9F',
     padding: 10,
+    marginBottom: 20,
+    borderRadius: 5,
   },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
+  buttonApprove: {
+    backgroundColor: 'green'
   },
-  buttonClose: {
-    backgroundColor: "#2196F3",
+  buttonCancel: {
+    backgroundColor: 'red'
   },
   textStyle: {
     color: "white",
@@ -448,23 +472,31 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: 15,
     textAlign: "center",
+    fontSize: 16
   },
   centerView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: 'rgba(0, 0, 0, 0.6)'
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20
   },
   buttonsContainer: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginRight: 10,
-    marginTop: 10
+    marginRight: 20,
+    marginBottom: 20
   },
   approveButton: {
     backgroundColor: "green",
     padding: 10,
     borderRadius: 13,
-    marginRight: 5
+    marginRight: 10
   },
   rejectButton: {
     backgroundColor: "red",
@@ -480,6 +512,22 @@ const styles = StyleSheet.create({
     bottom: 10,
     width: 20,
     height: 20,
+  },
+  leftContainer: {
+    flex: 3,
+    justifyContent: 'center',
+  },
+  rightContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  recheckModalButton: {
+    flex: 1,
+    borderRadius: 13,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginHorizontal: 5  // เพิ่มระยะห่างระหว่างปุ่ม
   },
 });
 

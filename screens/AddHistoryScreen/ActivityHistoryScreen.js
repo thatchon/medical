@@ -146,7 +146,7 @@ function ActivityHistoryScreen() {
         </ScrollView>
 
         <Modal
-          animationType="slide"
+          animationType="fade"
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
@@ -190,7 +190,7 @@ function ActivityHistoryScreen() {
     );
   }
 
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: 'white',
@@ -198,15 +198,6 @@ const styles = StyleSheet.create({
     },
     textStyle: {
       color: 'white'
-    },
-    card: {
-      backgroundColor: '#f0f0f0',
-      padding: 20,
-      marginBottom: 10,
-      borderRadius: 10,
-    },
-    cardText: {
-      fontSize: 16,
     },
     button: {
       backgroundColor: '#05AB9F',
@@ -231,18 +222,29 @@ const styles = StyleSheet.create({
       textAlign: 'center',
     },
     cardContainer: {
-      borderRadius: 10,
-      margin: 10,
-      backgroundColor: "#f7f7f7",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 6,
+      width: "80%",
+      alignItems: "left",
     },
     card: {
-      padding: 20,
-      borderRadius: 10,
+      width: 500,
+      height: 150,
+      marginTop: 20,
+      marginBottom: 20,
+      marginLeft: 10,
+      borderRadius: 8,
       backgroundColor: "white",
+      alignItems: "left",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    cardText: {
+      fontSize: 16,
     },
     modalText: {
       marginBottom: 15,
@@ -252,6 +254,7 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
+      backgroundColor: 'rgba(0, 0, 0, 0.6)'
     },
     modalView: {
       width: 400,
@@ -272,5 +275,6 @@ const styles = StyleSheet.create({
       elevation: 5,
     },
   });
+
 
 export default ActivityHistoryScreen;

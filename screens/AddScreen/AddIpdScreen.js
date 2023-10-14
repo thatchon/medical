@@ -11,6 +11,7 @@ function AddIpdScreen() {
   const [selectedDiagnosis, setSelectedDiagnosis] = useState(""); // State for selected diagnosis
   const [mainDiagnoses, setMainDiagnoses] = useState([]); // State to store main diagnoses
   
+
   const [hn, setHN] = useState(""); // HN
   const [coMorbid, setCoMorbid] = useState(""); // Co-Morbid Diagnosis
   const [note, setNote] = useState(""); // Note
@@ -38,6 +39,11 @@ function AddIpdScreen() {
       return (
         <input
           type="date"
+          style={{
+            marginTop: 5,
+            padding: 10,
+            fontSize: 16
+          }}
           value={selectedDate.toISOString().substr(0, 10)}
           onChange={(event) => setSelectedDate(new Date(event.target.value))}
         />
@@ -186,16 +192,24 @@ function AddIpdScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{ fontSize: 16, fontWeight: 400, marginVertical: 8 }}>วันที่รับผู้ป่วย</Text>
-      </View>
-      <DateInput />
-
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
+        }}>วันที่รับผู้ป่วย</Text>
+        <DateInput />
+      </View>
+
+
+      <View style={{ marginBottom: 16 }}>
+        <Text style={{
+          fontSize: 24,
+          fontWeight: 400,
+          marginVertical: 8,
+          textAlign: 'center'
 
         }}>อาจารย์</Text>
         <SelectList
@@ -205,40 +219,42 @@ function AddIpdScreen() {
         />
       </View>
 
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16, width: '70%'}}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>HN</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={hn}
-          onChangeText={setHN}
-          style={{
-            width: '100%'
-          }}
-        ></TextInput>
+        <View style={{
+          height: 48,
+          borderColor: 'black',
+          borderWidth: 1,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <TextInput
+            placeholder="กรอกรายละเอียด"
+            value={hn}
+            onChangeText={setHN}
+            style={{
+              width: '100%',
+              textAlign: 'center'
+            }}
+          ></TextInput>
+        </View>
       </View>
 
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>Main Diagnosis</Text>
-        {/* เราสมมติว่า mainDiagnoses เป็น array ที่มีค่าในรูปแบบ { key, value } */}
         <SelectList
           setSelected={setSelectedDiagnosis}
           data={mainDiagnoses}
@@ -267,60 +283,62 @@ function AddIpdScreen() {
 
       </View> */}
 
-<View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 16, width: '70%' }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
-        }}>Co-Morbid Diagnosis</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={coMorbid}
-          onChangeText={setCoMorbid}
-          style={{
-            width: '100%'
-          }}
-        ></TextInput>
-      </View>
+          textAlign: 'center'
 
-      <View style={{ marginBottom: 12 }}>
+        }}>Co-Morbid Diagnosis</Text>
+          <View style={{
+            height: 48,
+            borderColor: 'black',
+            borderWidth: 1,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <TextInput
+              placeholder="กรอกรายละเอียด"
+              value={coMorbid}
+              onChangeText={setCoMorbid}
+              style={{
+                width: '100%',
+                textAlign: 'center'
+              }}
+            ></TextInput>
+          </View>
+        </View>
+        
+      <View style={{ marginBottom: 16, width: '70%' }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>Note / Reflection (optional)</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 260,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={note}
-          onChangeText={setNote}
-          style={{
-            width: '100%',
-            height: '100%'
-          }}
-        ></TextInput>
-      </View>
+          <View style={{
+            height: 260,
+            borderColor: 'black',
+            borderWidth: 1,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <TextInput
+              placeholder="กรอกรายละเอียด"
+              value={note}
+              onChangeText={setNote}
+              style={{
+                width: '100%',
+                height: '100%',
+                textAlign: 'center'
+              }}
+            ></TextInput>
+          </View>
+        </View>
 
       <TouchableOpacity
         style={{
@@ -349,7 +367,6 @@ function AddIpdScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -357,6 +374,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
 });
 
 export default AddIpdScreen;

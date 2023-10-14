@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, CheckBox } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, CheckBox, Platform } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { db, auth } from '../../data/firebaseDB'
-import { getDocs, addDoc, collection, query, where } from "firebase/firestore";
+import { getDocs, addDoc, collection, query, where, Timestamp } from "firebase/firestore";
 // import CheckBox from '@react-native-community/checkbox';
 
 function AddProcedureScreen() {
@@ -11,8 +11,6 @@ function AddProcedureScreen() {
 
   const [selectedProcedures, setSelectedProcedures] = useState(""); // State for selected Procedures
   const [mainProcedure, setMainProcedure] = useState([]); // State to store main Procedure
-  
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
   const [hn, setHN] = useState(""); // HN
   const [remarks, setRemarks] = useState(""); // remarks
@@ -22,19 +20,50 @@ function AddProcedureScreen() {
   const [approvedByName, setApprovedByName] = useState(null); // สถานะสำหรับเก็บชื่ออาจารย์ที่ถูกเลือก
   const [teachers, setTeachers] = useState([]); // สถานะสำหรับเก็บรายการอาจารย์ทั้งหมด
   const [procedureLevel, setProcedureLevel] = useState(0);
+  const [date, setDate] = useState(new Date());
+  const [show, setShow] = useState(false);
 
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
+  const onChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShow(Platform.OS === "ios");
+    setDate(currentDate);
   };
 
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
+  const showDatepicker = () => {
+    setShow(true);
   };
 
-  const handleConfirm = (date) => {
-    // อัปเดต state เมื่อผู้ใช้เลือกวันที่ใหม่
-    setSelectedDate(date);
-    hideDatePicker();
+  const DateInput = () => {
+    if (Platform.OS === "web") {
+      return (
+        <input
+          type="date"
+          style={{
+            marginTop: 5,
+            padding: 10,
+            fontSize: 16
+          }}
+          value={selectedDate.toISOString().substr(0, 10)}
+          onChange={(event) => setSelectedDate(new Date(event.target.value))}
+        />
+      );
+    } else {
+      return (
+        <>
+          <Button onPress={showDatepicker} title="Show date picker!" />
+          {show && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={date}
+              mode={"date"}
+              is24Hour={true}
+              display="default"
+              onChange={onChange}
+            />
+          )}
+        </>
+      );
+    }
   };
 
   const onSelectTeacher = (selectedTeacherId) => {
@@ -129,10 +158,10 @@ function AddProcedureScreen() {
       // Check if a user is authenticated
       if (user) {
         const { uid } = user; 
-        
+        const timestamp = Timestamp.fromDate(selectedDate); // แปลง Date object เป็น Timestamp
         // Add a new document with a generated ID to a collection
         await addDoc(collection(db, "procedures"), {
-          admissionDate: selectedDate,
+          admissionDate: timestamp,
           createBy_id: uid, // User ID
           hn: hn, // HN
           procedureType: selectedProcedures,
@@ -168,44 +197,24 @@ function AddProcedureScreen() {
     <View style={styles.container}>
       <View style={{ marginBottom: 12 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
-        }}>วันที่รับผู้ป่วย</Text>
-      </View>
-      <TouchableOpacity
-        onPress={showDatePicker}
-        style={{
-          width: '70%',
-          marginBottom: 12,
-          height: 48,
-          borderColor: 'black',
-          borderWidth: 1,
-          borderRadius: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingLeft: 22,
-        }}
-      >
-        <Text>{selectedDate.toDateString()}</Text>
-      </TouchableOpacity>
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleConfirm}
-        onCancel={hideDatePicker}
-      />
+          textAlign: 'center'
 
-      <View style={{ 
-        marginBottom: 12, 
-        justifyContent: 'center',
-        alignItems: 'center' }}>
+        }}>วันที่รับผู้ป่วย</Text>
+        <DateInput />
+      </View>
+
+
+      <View style={{ marginBottom: 12 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
+          textAlign: 'center'
+
         }}>Procedure</Text>
-        {/* เราสมมติว่า mainProcedure เป็น array ที่มีค่าในรูปแบบ { key, value } */}
         <SelectList
           setSelected={setSelectedProcedures}
           data={mainProcedure}
@@ -213,72 +222,69 @@ function AddProcedureScreen() {
         />
       </View>
 
-      <View style={{ 
-        marginBottom: 12, 
-        justifyContent: 'center',
-        alignItems: 'center'
-       }}>
+      <View style={{ marginBottom: 12 }}>
         <Text style={{
-            fontSize: 16,
+            fontSize: 24,
             fontWeight: 400,
             marginVertical: 8,
-          }}>procedureLevel</Text>
+            textAlign: 'center'
+
+          }}>Level</Text>
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '80%', marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.checkboxContainerStyle}>
               <CheckBox value={procedureLevel === 1} onValueChange={() => setProcedureLevel(1)} />
-              <Text>ทำด้วยตัวเองกับผู้ป่วย</Text>
+              <Text style={{ marginLeft: 5, fontSize: 20 }}>ทำด้วยตัวเองกับผู้ป่วย</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.checkboxContainerStyle}>
               <CheckBox value={procedureLevel === 2} onValueChange={() => setProcedureLevel(2)} />
-              <Text>ทำกับหุ่น</Text>
+              <Text style={{ marginLeft: 5, fontSize: 20 }}>ทำกับหุ่น</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.checkboxContainerStyle}>
               <CheckBox value={procedureLevel === 3} onValueChange={() => setProcedureLevel(3)} />
-              <Text>ได้ช่วย</Text>
+              <Text style={{ marginLeft: 5, fontSize: 20 }}>ได้ช่วย</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.checkboxContainerStyle}>
               <CheckBox value={procedureLevel === 4} onValueChange={() => setProcedureLevel(4)} />
-              <Text>ได้ดู</Text>
+              <Text style={{ marginLeft: 5, fontSize: 20 }}>ได้ดู</Text>
             </View>
           </View>
       </View>
 
+      <View style={{ marginBottom: 12, width: '70%' }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>HN</Text>
+          <View style={{
+            height: 48,
+            borderColor: 'black',
+            borderWidth: 1,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <TextInput
+              placeholder="กรอกรายละเอียด"
+              value={hn}
+              onChangeText={setHN}
+              style={{
+                width: '100%',
+                textAlign: 'center'
+              }}
+            ></TextInput>
+          </View>
+        </View>
+
       <View style={{ marginBottom: 12 }}>
         <Text style={{
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: 400,
           marginVertical: 8,
-        }}>HN</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={hn}
-          onChangeText={setHN}
-          style={{
-            width: '100%'
-          }}
-        ></TextInput>
-      </View>
-
-      <View style={{ 
-        marginBottom: 12,
-        justifyContent: 'center',
-        alignItems: 'center' }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: 400,
-          marginVertical: 8,
+          textAlign: 'center'
 
         }}>ผู้ Approve</Text>
         <SelectList
@@ -310,32 +316,33 @@ function AddProcedureScreen() {
       </View> */}
 
 
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: 400,
-          marginVertical: 8,
-        }}>หมายเหตุ</Text>
-      </View>
-      <View style={{
-        width: '70%',
-        height: 260,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={remarks}
-          onChangeText={setRemarks}
-          style={{
-            width: '100%',
-            height: '100%'
-          }}
-        ></TextInput>
+      <View style={{ marginBottom: 12, width: '70%', }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>หมายเหตุ</Text>
+        <View style={{
+          height: 260,
+          borderColor: 'black',
+          borderWidth: 1,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <TextInput
+            placeholder="กรอกรายละเอียด"
+            value={remarks}
+            onChangeText={setRemarks}
+            style={{
+              width: '100%',
+              height: '100%',
+              textAlign: 'center'
+            }}
+          ></TextInput>
+        </View>
       </View>
 
       <TouchableOpacity
@@ -373,6 +380,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  checkboxContainerStyle: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    margin: 5, 
+    padding: 8, 
+    borderWidth: 1, 
+    borderColor: '#d1d1d1', 
+    borderRadius: 5,
+    backgroundColor: '#ffffff', 
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5
+  }
 });
 
 export default AddProcedureScreen;

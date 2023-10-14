@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useSelector } from "react-redux";
-
+import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
 function ActivityScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,6 +22,8 @@ function ActivityScreen({ navigation }) {
   const [action, setAction] = useState(null);
   const currentUserUid = useSelector((state) => state.user.uid);
   const role = useSelector((state) => state.role);
+
+  const [isApproveAllModalVisible, setApproveAllModalVisible] = useState(false);
 
   const thaiMonths = [
     'มกราคม',
@@ -189,7 +191,7 @@ function ActivityScreen({ navigation }) {
     return null;
   };
 
-  const handleApproveAll = async () => {
+  const handleActualApproveAll = async () => {
     try {
       // ประมวลผลทั้งหมดที่มีสถานะเป็น pending
       const updates = activityData
@@ -206,6 +208,10 @@ function ActivityScreen({ navigation }) {
     }
   };
 
+  const handleApproveAll = () => {
+    setApproveAllModalVisible(true);
+  };
+
   const renderCards = () => {
     return activityData
       .filter(activity => activity.status === 'pending') // กรองเฉพาะข้อมูลที่มีสถานะเป็น pending
@@ -216,29 +222,38 @@ function ActivityScreen({ navigation }) {
           onPress={() => handleCardPress(activity)}
         >
           <View style={styles.card}>
-            <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
-              ประเภท : {activity.activityType} ({activity.status})
-            </Text>
-
+            <View style={styles.leftContainer}>
             {role === 'student' ? (
-                <>
-                  <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                    อาจารย์ : {activity.professorName}
-                  </Text>
-                  <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                    Date : {formatDateToThai(activity.admissionDate.toDate())}
-                  </Text>
-                </>
-              ) : (
               <>
+                <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30 }}>
+                  ประเภท : {activity.activityType} ({activity.status})
+                </Text>
+                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                  อาจารย์ : {activity.professorName}
+                </Text>
+                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                  <FontAwesome name="calendar" size={20} color="black" /> {formatDateToThai(activity.admissionDate.toDate())}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={{ fontSize: 20, fontWeight: "bold", marginLeft: 20, lineHeight: 30, marginTop: 20 }}>
+                  ประเภท : {activity.activityType} ({activity.status})
+                </Text>
                 <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
                   นักเรียน : {activity.studentName}
                 </Text>
-                {/* <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
-                  Date : </Text> {formatDateToThai(activity.admissionDate.toDate())} */}
-
+                <Text style={{ marginLeft: 20, lineHeight: 30, opacity: 0.4 }}>
+                  <FontAwesome name="calendar" size={20} color="black" /> {formatDateToThai(activity.admissionDate.toDate())}
+                </Text>
+                </>
+            )}
+            </View>
+            {role !== 'student' && (
+              <View style={styles.rightContainer}>
                 <View style={styles.buttonsContainer}>
-                  {activity.status === 'pending' && <>
+                  {activity.status === 'pending' && (
+                  <>
                     <TouchableOpacity style={styles.approveButton} onPress={() => {
                       setSelectedActivity(activity);
                       setAction('approve');
@@ -253,15 +268,11 @@ function ActivityScreen({ navigation }) {
                     }}>
                       <Text style={styles.buttonText}>Reject</Text>
                     </TouchableOpacity>
-                  </>}
+                  </>
+                  )}
                 </View>
-              </>
+              </View>
             )}
-            <View style={{ position: 'absolute', bottom: 5, right: 5 }}>
-              {activity.status === 'approved' && <Ionicons name="checkmark-circle" size={24} color="green" />}
-              {activity.status === 'rejected' && <Ionicons name="close-circle" size={24} color="red" />}
-              {/* {activity.status === 'pending' && <MaterialIcons name="pending" size={24} color="black" />} */}
-            </View>
           </View>
         </TouchableOpacity>
       ));
@@ -272,30 +283,64 @@ function ActivityScreen({ navigation }) {
       {renderApprovedButton()}
       {/* Modal สำหรับยืนยัน Approve/Reject */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={confirmationModalVisible}
-      >
-        <View style={styles.centerView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>ยืนยันการ{action === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ'}</Text>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => {
-                action === 'approve' ? handleApprove() : handleReject();
-              }}
-            >
-              <Text style={styles.textStyle}>ยืนยัน</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setConfirmationModalVisible(false)}
-            >
-              <Text style={styles.textStyle}>ยกเลิก</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+              animationType="fade"
+              transparent={true}
+              visible={confirmationModalVisible}
+          >
+              <View style={styles.centerView}>
+                  <View style={styles.modalView}>
+                  <Text style={styles.modalText}>ยืนยันการ<Text style={{ fontWeight: "bold", fontSize: 20 }}>{action === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ'}</Text></Text>
+                      
+                      <View style={styles.buttonContainer}>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonApprove]}
+                              onPress={() => {
+                                  action === 'approve' ? handleApprove() : handleReject();
+                              }}
+                          >
+                              <Text style={styles.textStyle}>ยืนยัน</Text>
+                          </Pressable>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonCancel]}
+                              onPress={() => setConfirmationModalVisible(false)}
+                          >
+                              <Text style={styles.textStyle}>ยกเลิก</Text>
+                          </Pressable>
+                      </View>
+                  </View>
+              </View>
+          </Modal>
+
+      {/* Modal สำหรับยืนยัน ApproveAll */}
+      <Modal
+              animationType="fade"
+              transparent={true}
+              visible={isApproveAllModalVisible}
+          >
+              <View style={styles.centerView}>
+                  <View style={styles.modalView}>
+                  <Text style={styles.modalText}>ยืนยันการอนุมัติ<Text style={{ fontWeight: "bold", fontSize: 20 }}>ทั้งหมด?</Text></Text>
+                      
+                      <View style={styles.buttonContainer}>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonApprove]}
+                              onPress={() => {
+                                handleActualApproveAll();
+                                setApproveAllModalVisible(false);
+                              }}
+                          >
+                              <Text style={styles.textStyle}>ยืนยัน</Text>
+                          </Pressable>
+                          <Pressable
+                              style={[styles.recheckModalButton, styles.buttonCancel]}
+                              onPress={() => setApproveAllModalVisible(false)}
+                          >
+                              <Text style={styles.textStyle}>ยกเลิก</Text>
+                          </Pressable>
+                      </View>
+                  </View>
+              </View>
+          </Modal>
 
       <View style={styles.boxCard}>
         <ScrollView>
@@ -305,7 +350,7 @@ function ActivityScreen({ navigation }) {
 
       {/*  Modal สำหรับแสดงข้อมูลในการ์ด */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
@@ -434,14 +479,16 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   button: {
-    borderRadius: 20,
+    backgroundColor: '#05AB9F',
     padding: 10,
+    marginBottom: 20,
+    borderRadius: 5,
   },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
+  buttonApprove: {
+    backgroundColor: 'green'
   },
-  buttonClose: {
-    backgroundColor: "#2196F3",
+  buttonCancel: {
+    backgroundColor: 'red'
   },
   textStyle: {
     color: "white",
@@ -451,23 +498,31 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: 15,
     textAlign: "center",
+    fontSize: 16
   },
   centerView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: 'rgba(0, 0, 0, 0.6)'
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20
   },
   buttonsContainer: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginRight: 10,
-    marginTop: 10
+    marginRight: 20,
+    marginBottom: 20
   },
   approveButton: {
     backgroundColor: "green",
     padding: 10,
     borderRadius: 13,
-    marginRight: 5
+    marginRight: 10
   },
   rejectButton: {
     backgroundColor: "red",
@@ -483,6 +538,22 @@ const styles = StyleSheet.create({
     bottom: 10,
     width: 20,
     height: 20,
+  },
+  leftContainer: {
+    flex: 3,
+    justifyContent: 'center',
+  },
+  rightContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  recheckModalButton: {
+    flex: 1,
+    borderRadius: 13,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginHorizontal: 5  // เพิ่มระยะห่างระหว่างปุ่ม
   },
 });
 
