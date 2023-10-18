@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Platform } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Platform, ScrollView } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { db, auth } from '../../data/firebaseDB'
@@ -212,118 +212,120 @@ function AddActivityScreen() {
 
 
   return (
-    <View style={styles.container}>
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>วันที่รับผู้ป่วย</Text>
-        <DateInput />
-      </View>
-
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>ประเภท</Text>
-        <SelectList
-          setSelected={setSelectedActivityType}
-          data={activityType}
-          placeholder={"เลือกประเภท"}
-        />
-      </View>
-
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>อาจารย์</Text>
-        <SelectList
-          setSelected={onSelectTeacher}
-          data={teachers}
-          placeholder={"เลือกชื่ออาจารย์"}
-        />
-      </View>
-
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>Main Diagnosis</Text>
-        <SelectList
-          setSelected={setSelectedDiagnosis}
-          data={mainDiagnoses}
-          placeholder={"เลือกการวินิฉัย"}
-        />
-      </View>
-
-      <View style={{ marginBottom: 12, width: '70%' }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>Note / Reflection (optional)</Text>
-      <View style={{
-        height: 260,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <TextInput
-          placeholder="กรอกรายละเอียด"
-          value={note}
-          onChangeText={setNote}
-          style={{
-            width: '100%',
-            height: '100%',
+    // <ScrollView>
+      <View style={styles.container}>
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
             textAlign: 'center'
-          }}
-        ></TextInput>
+
+          }}>วันที่รับผู้ป่วย</Text>
+          <DateInput />
         </View>
+
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>ประเภท</Text>
+          <SelectList
+            setSelected={setSelectedActivityType}
+            data={activityType}
+            placeholder={"เลือกประเภท"}
+          />
+        </View>
+
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>อาจารย์</Text>
+          <SelectList
+            setSelected={onSelectTeacher}
+            data={teachers}
+            placeholder={"เลือกชื่ออาจารย์"}
+          />
+        </View>
+
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>Main Diagnosis</Text>
+          <SelectList
+            setSelected={setSelectedDiagnosis}
+            data={mainDiagnoses}
+            placeholder={"เลือกการวินิฉัย"}
+          />
+        </View>
+
+        <View style={{ marginBottom: 12, width: '70%' }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>Note / Reflection (optional)</Text>
+        <View style={{
+          height: 260,
+          borderColor: 'black',
+          borderWidth: 1,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <TextInput
+            placeholder="กรอกรายละเอียด"
+            value={note}
+            onChangeText={setNote}
+            style={{
+              width: '100%',
+              height: '100%',
+              textAlign: 'center'
+            }}
+          ></TextInput>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={{
+            height: 48,
+            width: 140,
+            marginVertical: 10,
+            marginBottom: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#05AB9F",
+            borderRadius: 30,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+          onPress={saveDataToFirestore}
+        >
+          <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={{
-          height: 48,
-          width: 140,
-          marginVertical: 10,
-          marginBottom: 10,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#05AB9F",
-          borderRadius: 30,
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: 2,
-          },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
-        onPress={saveDataToFirestore}
-      >
-        <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+    );
+  }
 
 
 const styles = StyleSheet.create({

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Platform } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Platform, ScrollView } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { db, auth } from '../../data/firebaseDB'
 import { getDocs, addDoc, collection, query, where, Timestamp } from "firebase/firestore";
+import { AntDesign } from "@expo/vector-icons";
 
 function AddIpdScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const [selectedDiagnosis, setSelectedDiagnosis] = useState(""); // State for selected diagnosis
+  const [selectedDiagnosis, setSelectedDiagnosis] = useState([{}]); // State for selected diagnosis
   const [mainDiagnoses, setMainDiagnoses] = useState([]); // State to store main diagnoses
   
 
@@ -78,6 +79,15 @@ function AddIpdScreen() {
     }
 }
   
+const addDiagnosis = () => {
+  setSelectedDiagnosis([...selectedDiagnosis, {}]);
+};
+
+const removeDiagnosis = (index) => {
+  const newDiagnosis = [...selectedDiagnosis];
+  newDiagnosis.splice(index, 1);
+  setSelectedDiagnosis(newDiagnosis);
+};
 
   useEffect(() => {
     async function fetchMainDiagnoses() {
@@ -128,8 +138,8 @@ function AddIpdScreen() {
   const saveDataToFirestore = async () => {
     try {
 
-      if (!selectedDiagnosis) {
-        alert("โปรดกรอก Main Diagnosis");
+      if (!selectedDiagnosis || selectedDiagnosis.some(diagnosis => !diagnosis.value)) {
+        alert("โปรดกรอก Main Diagnosis ในทุกแถว");
         return;
       }
       
@@ -173,7 +183,7 @@ function AddIpdScreen() {
         // Clear the input fields after successfully saving data
         setHN("");
         setSelectedDate(new Date());
-        setSelectedDiagnosis("");
+        setSelectedDiagnosis([{}]);
         setCoMorbid("");
         setNote("");
 
@@ -191,106 +201,43 @@ function AddIpdScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={{ marginBottom: 16 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
+    <ScrollView>
+      <View style={styles.container}>
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
 
-        }}>วันที่รับผู้ป่วย</Text>
-        <DateInput />
-      </View>
-
-
-      <View style={{ marginBottom: 16 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>อาจารย์</Text>
-        <SelectList
-          setSelected={onSelectTeacher}
-          data={teachers}
-          placeholder={"เลือกชื่ออาจารย์"}
-        />
-      </View>
-
-      <View style={{ marginBottom: 16, width: '70%'}}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>HN</Text>
-        <View style={{
-          height: 48,
-          borderColor: 'black',
-          borderWidth: 1,
-          borderRadius: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <TextInput
-            placeholder="กรอกรายละเอียด"
-            value={hn}
-            onChangeText={setHN}
-            style={{
-              width: '100%',
-              textAlign: 'center'
-            }}
-          ></TextInput>
+          }}>วันที่รับผู้ป่วย</Text>
+          <DateInput />
         </View>
-      </View>
-
-      <View style={{ marginBottom: 16 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>Main Diagnosis</Text>
-        <SelectList
-          setSelected={setSelectedDiagnosis}
-          data={mainDiagnoses}
-          placeholder={"เลือกการวินิฉัย"}
-        />
-      </View>
-
-      {/* <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="เพิ่มการวินิฉัยอื่นๆ"
-
-          style={{
-            width: '100%'
-          }}
-        ></TextInput>
 
 
-      </View> */}
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
 
-      <View style={{ marginBottom: 16, width: '70%' }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
+          }}>อาจารย์</Text>
+          <SelectList
+            setSelected={onSelectTeacher}
+            data={teachers}
+            placeholder={"เลือกชื่ออาจารย์"}
+          />
+        </View>
 
-        }}>Co-Morbid Diagnosis</Text>
+        <View style={{ marginBottom: 16, width: '70%'}}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>HN</Text>
           <View style={{
             height: 48,
             borderColor: 'black',
@@ -301,8 +248,8 @@ function AddIpdScreen() {
           }}>
             <TextInput
               placeholder="กรอกรายละเอียด"
-              value={coMorbid}
-              onChangeText={setCoMorbid}
+              value={hn}
+              onChangeText={setHN}
               style={{
                 width: '100%',
                 textAlign: 'center'
@@ -310,66 +257,131 @@ function AddIpdScreen() {
             ></TextInput>
           </View>
         </View>
-        
-      <View style={{ marginBottom: 16, width: '70%' }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
 
-        }}>Note / Reflection (optional)</Text>
-          <View style={{
-            height: 260,
-            borderColor: 'black',
-            borderWidth: 1,
-            borderRadius: 8,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <TextInput
-              placeholder="กรอกรายละเอียด"
-              value={note}
-              onChangeText={setNote}
-              style={{
-                width: '100%',
-                height: '100%',
-                textAlign: 'center'
-              }}
-            ></TextInput>
-          </View>
+        <View>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>Main Diagnosis</Text>
         </View>
+        {
+          selectedDiagnosis.map((diagnosis, index) => (
+            <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <SelectList
+                    setSelected={(value) => {
+                      const newDiagnoses = [...selectedDiagnosis];
+                      newDiagnoses[index] = { value: value }; // ปรับปรุงจาก newDiagnoses[index].value = value;
+                      setSelectedDiagnosis(newDiagnoses);
+                    }}
+                data={mainDiagnoses}
+                placeholder={"เลือกการวินิฉัย"}
+              />
+              {index === selectedDiagnosis.length - 1 ? (
+                <TouchableOpacity onPress={addDiagnosis} style={{ marginLeft: 10 }}>
+                  <AntDesign name="plus" size={20} color="black" />
+                </TouchableOpacity>
+              ) : null}
+              {selectedDiagnosis.length > 1 ? (
+                <TouchableOpacity onPress={() => removeDiagnosis(index)} style={{ marginLeft: 10 }} >
+                  <AntDesign name="minus" size={20} color="black" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ))
+        }
 
-      <TouchableOpacity
-        style={{
-          height: 48,
-          width: 140,
-          marginVertical: 10,
-          marginBottom: 10,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#05AB9F",
-          borderRadius: 30,
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: 2,
-          },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
-        onPress={saveDataToFirestore}
-      >
-        <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
-      </TouchableOpacity>
-    </View>
+
+        <View style={{ marginBottom: 16, width: '70%' }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>Co-Morbid Diagnosis</Text>
+            <View style={{
+              height: 48,
+              borderColor: 'black',
+              borderWidth: 1,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <TextInput
+                placeholder="กรอกรายละเอียด"
+                value={coMorbid}
+                onChangeText={setCoMorbid}
+                style={{
+                  width: '100%',
+                  textAlign: 'center'
+                }}
+              ></TextInput>
+            </View>
+          </View>
+          
+        <View style={{ marginBottom: 16, width: '70%' }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>Note / Reflection (optional)</Text>
+            <View style={{
+              height: 260,
+              borderColor: 'black',
+              borderWidth: 1,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <TextInput
+                placeholder="กรอกรายละเอียด"
+                value={note}
+                onChangeText={setNote}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  textAlign: 'center'
+                }}
+              ></TextInput>
+            </View>
+          </View>
+
+        <TouchableOpacity
+          style={{
+            height: 48,
+            width: 140,
+            marginVertical: 10,
+            marginBottom: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#05AB9F",
+            borderRadius: 30,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+          onPress={saveDataToFirestore}
+        >
+          <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",

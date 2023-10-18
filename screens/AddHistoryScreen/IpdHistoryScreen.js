@@ -168,7 +168,8 @@ function IpdHistoryScreen() {
                   <Text style={{ fontWeight: "bold" }}>HN :</Text> {selectedPatient.hn || "ไม่มี"}
                 </Text>
                 <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }}>Main Diagnosis : </Text> {selectedPatient.mainDiagnosis}
+                  <Text style={{ fontWeight: "bold" }}>Main Diagnosis : </Text> 
+                  {selectedPatient.mainDiagnosis.map(diagnosis => diagnosis.value).join(', ')}
                 </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>Co - Morbid Diseases : </Text> {selectedPatient.coMorbid || "ไม่มี"}

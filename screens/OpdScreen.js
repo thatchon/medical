@@ -380,7 +380,8 @@ function OpdScreen({ navigation }) {
                   <Text style={{ fontWeight: "bold" }}>HN :</Text> {selectedPatient.hn || "ไม่มี"}
                 </Text>
                 <Text style={styles.modalText}>
-                  <Text style={{ fontWeight: "bold" }}>Main Diagnosis : </Text> {selectedPatient.mainDiagnosis}
+                  <Text style={{ fontWeight: "bold" }}>Main Diagnosis : </Text> 
+                  {selectedPatient.mainDiagnosis.map(diagnosis => diagnosis.value).join(', ')}
                 </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>Co - Morbid Diseases : </Text> {selectedPatient.coMorbid || "ไม่มี"}
@@ -390,7 +391,7 @@ function OpdScreen({ navigation }) {
                 </Text>
                 {selectedPatient.pdfUrl && (
                   <Pressable
-                    style={[styles.button, styles.buttonLink]}
+                    style={[styles.button]}
                     onPress={() => Linking.openURL(selectedPatient.pdfUrl)}
                   >
                     <Text style={styles.textStyle}>ดูไฟล์ PDF</Text>

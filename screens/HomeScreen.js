@@ -14,31 +14,38 @@ const HomeScreen = ({ navigation }) => {
     // ส่งผู้ใช้กลับไปหน้า SelectRole หรือหน้าที่คุณต้องการหลังจาก Logout
     navigation.navigate('SelectRole'); // แทน 'SelectRole' ด้วยชื่อหน้าที่คุณต้องการ
   };
+
   return (
     <View style={styles.container}>
-      
+      <View style={styles.newBox}>
         <Image
           style={styles.image}
-          source={{uri: 'https://reactjs.org/logo-og.png'}}
+          source={require("../assets/doctor.png")}
           resizeMode={"cover"}
         />
-        <Text style={{ fontSize: 40, color: '#00046D' }}>ยินดีต้อนรับ: {user?.displayName}</Text>
-        <Text style={{ fontSize: 40, color: '#00046D', marginBottom: 20 }}>บทบาท: {role}</Text>
-      
-      {role !== 'teacher' && (
+        <Text style={{ fontSize: 30, color: '#00046D', fontWeight: "bold", marginTop: 20 }}>{user.displayName}</Text>
+        <Text style={{ fontSize: 30, color: '#00046D' }}>{role === 'student' ? 'นักศึกษาแพทย์' : role === 'teacher' ? 'อาจารย์แพทย์' : role}</Text>
+        {role == 'teacher' && (
+          <Text style={{ fontSize: 30, color: '#00046D' }}>Department : [{user.department}]</Text>
+        )}
+    
+      </View>
+        <View style={styles.bottomBox}>
+        {role !== 'teacher' && (
+          <TouchableOpacity
+            style={styles.portfolioButton}
+            onPress={() => navigation.navigate('Portfolio')}
+          >
+            <Text style={{ fontSize: 28, color: 'white' }}>My Portfolio</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
-          style={styles.portfolioButton}
-          onPress={() => navigation.navigate('Portfolio')}
+          style={styles.logoutButton}
+          onPress={handleLogout}
         >
-          <Text style={{ fontSize: 28, color: 'white' }}>My Portfolio</Text>
+          <Text style={{ fontSize: 28, color: 'white' }}>Logout</Text>
         </TouchableOpacity>
-      )}
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleLogout}
-      >
-        <Text style={{ fontSize: 28, color: 'white' }}>Logout</Text>
-      </TouchableOpacity>
+        </View>
     </View>
   );
 };
@@ -48,6 +55,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'white'
   },
   portfolioButton: {
     height: 63,
@@ -68,15 +76,24 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   image: {
-    width: '220px',
-    height: '220px',
-    borderColor: 'red',
-    borderWidth: 2,
-    borderRadius: 75,
+    width: 200,
+    height: 200,
+    // borderWidth: 0.5,
+    // borderRadius: '50%',
     marginBottom: 10
-    
-    
   },
+  newBox: {
+    width: 652,
+    height: 704,
+    justifyContent: 'center',
+    backgroundColor: '#FAFAFA',
+    alignItems: 'center',
+    borderRadius: 8
+  },
+  bottomBox: {
+    marginTop: 80,
+    alignItems: 'center'
+  }
 });
 
 export default HomeScreen;

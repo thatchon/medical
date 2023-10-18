@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, CheckBox, Platform } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, CheckBox, Platform, ScrollView } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { db, auth } from '../../data/firebaseDB'
@@ -194,73 +194,139 @@ function AddProcedureScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>วันที่รับผู้ป่วย</Text>
-        <DateInput />
-      </View>
-
-
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>Procedure</Text>
-        <SelectList
-          setSelected={setSelectedProcedures}
-          data={mainProcedure}
-          placeholder={"โปรดระบุ"}
-        />
-      </View>
-
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-            fontSize: 24,
-            fontWeight: 400,
-            marginVertical: 8,
-            textAlign: 'center'
-
-          }}>Level</Text>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '80%', marginBottom: 12 }}>
-            <View style={styles.checkboxContainerStyle}>
-              <CheckBox value={procedureLevel === 1} onValueChange={() => setProcedureLevel(1)} />
-              <Text style={{ marginLeft: 5, fontSize: 20 }}>ทำด้วยตัวเองกับผู้ป่วย</Text>
-            </View>
-            <View style={styles.checkboxContainerStyle}>
-              <CheckBox value={procedureLevel === 2} onValueChange={() => setProcedureLevel(2)} />
-              <Text style={{ marginLeft: 5, fontSize: 20 }}>ทำกับหุ่น</Text>
-            </View>
-            <View style={styles.checkboxContainerStyle}>
-              <CheckBox value={procedureLevel === 3} onValueChange={() => setProcedureLevel(3)} />
-              <Text style={{ marginLeft: 5, fontSize: 20 }}>ได้ช่วย</Text>
-            </View>
-            <View style={styles.checkboxContainerStyle}>
-              <CheckBox value={procedureLevel === 4} onValueChange={() => setProcedureLevel(4)} />
-              <Text style={{ marginLeft: 5, fontSize: 20 }}>ได้ดู</Text>
-            </View>
-          </View>
-      </View>
-
-      <View style={{ marginBottom: 12, width: '70%' }}>
+    // <ScrollView>
+      <View style={styles.container}>
+        <View style={{ marginBottom: 12 }}>
           <Text style={{
             fontSize: 24,
             fontWeight: 400,
             marginVertical: 8,
             textAlign: 'center'
 
-          }}>HN</Text>
+          }}>วันที่รับผู้ป่วย</Text>
+          <DateInput />
+        </View>
+
+
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>Procedure</Text>
+          <SelectList
+            setSelected={setSelectedProcedures}
+            data={mainProcedure}
+            placeholder={"โปรดระบุ"}
+          />
+        </View>
+
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{
+              fontSize: 24,
+              fontWeight: 400,
+              marginVertical: 8,
+              textAlign: 'center'
+
+            }}>Level</Text>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '80%', marginBottom: 12 }}>
+              <View style={styles.checkboxContainerStyle}>
+                <CheckBox value={procedureLevel === 1} onValueChange={() => setProcedureLevel(1)} />
+                <Text style={{ marginLeft: 5, fontSize: 20 }}>ทำด้วยตัวเองกับผู้ป่วย</Text>
+              </View>
+              <View style={styles.checkboxContainerStyle}>
+                <CheckBox value={procedureLevel === 2} onValueChange={() => setProcedureLevel(2)} />
+                <Text style={{ marginLeft: 5, fontSize: 20 }}>ทำกับหุ่น</Text>
+              </View>
+              <View style={styles.checkboxContainerStyle}>
+                <CheckBox value={procedureLevel === 3} onValueChange={() => setProcedureLevel(3)} />
+                <Text style={{ marginLeft: 5, fontSize: 20 }}>ได้ช่วย</Text>
+              </View>
+              <View style={styles.checkboxContainerStyle}>
+                <CheckBox value={procedureLevel === 4} onValueChange={() => setProcedureLevel(4)} />
+                <Text style={{ marginLeft: 5, fontSize: 20 }}>ได้ดู</Text>
+              </View>
+            </View>
+        </View>
+
+        <View style={{ marginBottom: 12, width: '70%' }}>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: 400,
+              marginVertical: 8,
+              textAlign: 'center'
+
+            }}>HN</Text>
+            <View style={{
+              height: 48,
+              borderColor: 'black',
+              borderWidth: 1,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <TextInput
+                placeholder="กรอกรายละเอียด"
+                value={hn}
+                onChangeText={setHN}
+                style={{
+                  width: '100%',
+                  textAlign: 'center'
+                }}
+              ></TextInput>
+            </View>
+          </View>
+
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 400,
+            marginVertical: 8,
+            textAlign: 'center'
+
+          }}>ผู้ Approve</Text>
+          <SelectList
+            setSelected={onSelectTeacher}
+            data={teachers}
+            placeholder={"เลือกชื่ออาจารย์"}
+          />
+        </View>
+
+        {/* <View style={{
+          width: '70%',
+          height: 48,
+          borderColor: 'black',
+          borderWidth: 1,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingLeft: 22
+        }}>
+          <TextInput
+            placeholder="เพิ่มการวินิฉัยอื่นๆ"
+
+            style={{
+              width: '100%'
+            }}
+          ></TextInput>
+
+
+        </View> */}
+
+
+        <View style={{ marginBottom: 12, width: '70%', }}>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: 400,
+              marginVertical: 8,
+              textAlign: 'center'
+
+            }}>หมายเหตุ</Text>
           <View style={{
-            height: 48,
+            height: 260,
             borderColor: 'black',
             borderWidth: 1,
             borderRadius: 8,
@@ -269,106 +335,42 @@ function AddProcedureScreen() {
           }}>
             <TextInput
               placeholder="กรอกรายละเอียด"
-              value={hn}
-              onChangeText={setHN}
+              value={remarks}
+              onChangeText={setRemarks}
               style={{
                 width: '100%',
+                height: '100%',
                 textAlign: 'center'
               }}
             ></TextInput>
           </View>
         </View>
 
-      <View style={{ marginBottom: 12 }}>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: 400,
-          marginVertical: 8,
-          textAlign: 'center'
-
-        }}>ผู้ Approve</Text>
-        <SelectList
-          setSelected={onSelectTeacher}
-          data={teachers}
-          placeholder={"เลือกชื่ออาจารย์"}
-        />
-      </View>
-
-      {/* <View style={{
-        width: '70%',
-        height: 48,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingLeft: 22
-      }}>
-        <TextInput
-          placeholder="เพิ่มการวินิฉัยอื่นๆ"
-
+        <TouchableOpacity
           style={{
-            width: '100%'
+            height: 48,
+            width: 140,
+            marginVertical: 10,
+            marginBottom: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#05AB9F",
+            borderRadius: 30,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
           }}
-        ></TextInput>
-
-
-      </View> */}
-
-
-      <View style={{ marginBottom: 12, width: '70%', }}>
-          <Text style={{
-            fontSize: 24,
-            fontWeight: 400,
-            marginVertical: 8,
-            textAlign: 'center'
-
-          }}>หมายเหตุ</Text>
-        <View style={{
-          height: 260,
-          borderColor: 'black',
-          borderWidth: 1,
-          borderRadius: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <TextInput
-            placeholder="กรอกรายละเอียด"
-            value={remarks}
-            onChangeText={setRemarks}
-            style={{
-              width: '100%',
-              height: '100%',
-              textAlign: 'center'
-            }}
-          ></TextInput>
-        </View>
+          onPress={saveDataToFirestore}
+        >
+          <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={{
-          height: 48,
-          width: 140,
-          marginVertical: 10,
-          marginBottom: 10,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#05AB9F",
-          borderRadius: 30,
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: 2,
-          },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
-        onPress={saveDataToFirestore}
-      >
-        <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
-      </TouchableOpacity>
-    </View>
   );
 }
 

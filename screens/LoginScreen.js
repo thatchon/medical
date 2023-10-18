@@ -25,6 +25,8 @@ const LoginScreen = ({ route, navigation }) => {
   }, [dispatch]);
 
   const handleLogin = () => {
+    const lowercaseEmail = email.toLowerCase();
+
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
@@ -32,16 +34,16 @@ const LoginScreen = ({ route, navigation }) => {
         getDocs(userRef)
         .then((querySnapshot) => {
           let foundUser = null;
-
+  
           querySnapshot.forEach((doc) => {
             if (doc.exists()) {
               const userData = doc.data();
-              if (userData.email === email && userData.role === role) { // ตรวจสอบว่ามี email และ role ที่ตรงกัน
+              if (userData.email === lowercaseEmail && userData.role === role) {
                 foundUser = userData;
               }
             }
           });
-
+  
           if (foundUser) {
             dispatch(setUser(foundUser));
             dispatch(setRole(role));
@@ -55,10 +57,14 @@ const LoginScreen = ({ route, navigation }) => {
         });
     })
     .catch((error) => {
-      setErrorMessage('เข้าสู่ระบบไม่สำเร็จ');
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านผิดพลาด');
+      } else {
+        setErrorMessage('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+      }
       console.error('เข้าสู่ระบบผิดพลาด:', error);
     });
-};
+  };
 
   let roleText = '';
   if (role === 'student') {
@@ -77,7 +83,7 @@ const LoginScreen = ({ route, navigation }) => {
       <TextInput
         placeholder="ชื่อผู้ใช้งาน"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => setEmail(text.toLowerCase())}
         style={styles.input}
       />
       <TextInput
