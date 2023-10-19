@@ -60,9 +60,12 @@ const ReportScreen = () => {
   const formatDataForExport = (data) => {
     return data.map(item => ({
       ...item,
-      admissionDate: formatDate(item.admissionDate)
+      admissionDate: formatDate(item.admissionDate),
+      Images: item.Images ? item.Images.join(', ') : '' // จัดรูปแบบข้อมูล Images
     }));
   };
+
+
   const handleDownload = () => {
     const wb = XLSX.utils.book_new();
   

@@ -10,7 +10,6 @@ import OpdScreen from '../screens/OpdScreen';
 import ActivityScreen from '../screens/ActivityScreen';
 import ProcedureScreen from '../screens/ProcedureScreen';
 import ReportScreen from '../screens/ReportScreen';
-import DownloadScreen from '../screens/DownloadScreen';
 import AddIpdScreen from '../screens/AddScreen/AddIpdScreen';
 import AddOpdScreen from '../screens/AddScreen/AddOpdScreen';
 import AddActivityScreen from '../screens/AddScreen/AddActivityScreen';
@@ -19,6 +18,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
+import { useSelector } from "react-redux";
 
 import IpdHistoryScreen from '../screens/AddHistoryScreen/IpdHistoryScreen'
 import OpdHistoryScreen from '../screens/AddHistoryScreen/OpdHistoryScreen'
@@ -30,7 +30,10 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen'
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+
 function MainTabNavigator() {
+  const role = useSelector((state) => state.user.role);
+  
   return (
     <Tab.Navigator screenOptions={() => ({
       tabBarStyle: {
@@ -119,30 +122,25 @@ function MainTabNavigator() {
           headerRight: () => <ActivityHeaderRight navigation={navigation} />
         })} />
 
-      <Tab.Screen name="รายงานผล" component={ReportScreen}
-        options={{
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name="document" size={24} color={focused ? '#007BFF' : 'white'} />
-          ),
-          headerStyle: {
-            backgroundColor: '#7274AE',
-          },
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }} />
-      {/* <Tab.Screen name="ดาวน์โหลด" component={DownloadScreen} options={{
-          headerStyle: {
-            backgroundColor: '#7274AE',
-          },
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}/> */}
+      {role !== "teacher" && (
+          <Tab.Screen 
+              name="รายงานผล" 
+              component={ReportScreen}
+              options={{
+                  tabBarIcon: ({ focused, color, size }) => (
+                      <Ionicons name="document" size={24} color={focused ? '#007BFF' : 'white'} />
+                  ),
+                  headerStyle: {
+                      backgroundColor: '#7274AE',
+                  },
+                  headerTintColor: '#fff',
+                  headerTitleAlign: 'center',
+                  headerTitleStyle: {
+                      fontWeight: 'bold',
+                  },
+              }} 
+          />
+      )}
     </Tab.Navigator>
   );
 }
