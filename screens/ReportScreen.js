@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, Picker, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Picker, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import { db } from '../data/firebaseDB';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -61,7 +61,7 @@ const ReportScreen = () => {
     return data.map(item => ({
       ...item,
       admissionDate: formatDate(item.admissionDate),
-      Images: item.images ? item.images.join(', ') : '' // จัดรูปแบบข้อมูล Images
+      Images: item.images ? item.images.join(', ') : ''
     }));
   };
 
@@ -100,24 +100,25 @@ const ReportScreen = () => {
 
 
   return (
-    <View style={styles.reportContainer}>
-      <View style={styles.reportContent}>
-        <Text style={{ fontSize: 16 }}>Save As : </Text>
-        {/* เปลี่ยน <select> เป็น <Picker> ของ react-native */}
-        <Picker
-              selectedValue={fileFormat}
-              style={styles.pickerStyle}
-              onValueChange={(itemValue, itemIndex) => setFileFormat(itemValue)}
-          >
-          <Picker.Item label="CSV" value="csv" />
-          <Picker.Item label="XLS" value="xls" />
-          <Picker.Item label="XLSX" value="xlsx" />
-        </Picker>
+    <View style={styles.mainContainer}>
+      <View style={styles.reportContainer}>
+        <View style={styles.reportContent}>
+          <Text style={{ fontSize: 16 }}>Save As : </Text>
+          <Picker
+                selectedValue={fileFormat}
+                style={styles.pickerStyle}
+                onValueChange={(itemValue, itemIndex) => setFileFormat(itemValue)}
+            >
+            <Picker.Item label="CSV" value="csv" />
+            <Picker.Item label="XLS" value="xls" />
+            <Picker.Item label="XLSX" value="xlsx" />
+          </Picker>
 
-        <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
-          <AntDesign name="download" size={16} color="white" />
-          <Text style={styles.downloadText}>Download</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
+            <AntDesign name="download" size={16} color="white" />
+            <Text style={styles.downloadText}>Download</Text>
+        </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -133,8 +134,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 5,
-    marginTop: 20,
-    marginLeft: 25
+    marginTop: 20
   },
   reportContent: {
     flexDirection: 'row',
@@ -165,6 +165,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-},
+  },
+  mainContainer: {
+    flex: 1, 
+    justifyContent: 'flex-start', 
+    alignItems: 'center', 
+    backgroundColor: '#f5f5f5' 
+  },
 });
 export default ReportScreen;

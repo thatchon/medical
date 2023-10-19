@@ -10,10 +10,14 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  Linking
+  Linking,
+  Dimensions
 } from "react-native";
 import { useSelector } from "react-redux";
-import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
+
+const windowWidth = Dimensions.get('window').width;
+const isLandscape = windowWidth > Dimensions.get('window').height;
 
 function OpdScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -138,8 +142,9 @@ function OpdScreen({ navigation }) {
           style={{
             height: 37,
             width: 174,
-            marginTop: 50,
-            marginLeft: 50,
+            marginTop: isLandscape ? 25 : 50,
+            marginLeft: isLandscape ? 60 : 50,
+            marginBottom: isLandscape ? 25 : 0, 
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: "#05AB9F",

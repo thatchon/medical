@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearUser } from '../redux/action'; // เปลี่ยนจาก '../redux/action' เป็น '../redux/action'
 
+const windowWidth = Dimensions.get('window').width;
+const isLandscape = windowWidth > Dimensions.get('window').height;
 const HomeScreen = ({ navigation }) => {
   const user = useSelector((state) => state.user);
   const role = useSelector((state) => state.role);
@@ -78,13 +80,11 @@ const styles = StyleSheet.create({
   image: {
     width: 200,
     height: 200,
-    // borderWidth: 0.5,
-    // borderRadius: '50%',
     marginBottom: 10
   },
   newBox: {
-    width: 652,
-    height: 704,
+    width: isLandscape ? '50%' : 652, // ปรับขนาดกล่องในแนวนอน
+    height: isLandscape ? '50%' : 704, // ปรับขนาดกล่องในแนวนอน
     justifyContent: 'center',
     backgroundColor: '#FAFAFA',
     alignItems: 'center',

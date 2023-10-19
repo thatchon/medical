@@ -241,7 +241,7 @@ function AddActivityScreen() {
 
 
   return (
-    // <ScrollView>
+    <ScrollView>
       <View style={styles.container}>
         <View style={{ marginBottom: 12 }}>
           <Text style={{
@@ -360,7 +360,7 @@ function AddActivityScreen() {
           <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
         </TouchableOpacity>
       </View>
-
+    </ScrollView>
     );
   }
 

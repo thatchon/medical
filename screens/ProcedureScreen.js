@@ -11,10 +11,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Linking
+  Linking,
+  Dimensions
 } from "react-native";
 import { useSelector } from "react-redux";
 import { FontAwesome } from "@expo/vector-icons";
+
+const windowWidth = Dimensions.get('window').width;
+const isLandscape = windowWidth > Dimensions.get('window').height;
 
 function ProcedureScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -144,8 +148,9 @@ function ProcedureScreen({ navigation }) {
           style={{
             height: 37,
             width: 174,
-            marginTop: 50,
-            marginLeft: 50,
+            marginTop: isLandscape ? 25 : 50,
+            marginLeft: isLandscape ? 60 : 50,
+            marginBottom: isLandscape ? 25 : 0, 
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: "#05AB9F",
@@ -403,7 +408,7 @@ function ProcedureScreen({ navigation }) {
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>หมายเหตุ : </Text> {selectedProcedure.remarks || "ไม่มี"}
                 </Text>
-                {selectedProcedure.images && (
+                {selectedProcedure.images && selectedProcedure.images.length > 0 && (
                   <Pressable
                     onPress={viewImages}
                     style={[styles.button, styles.buttonViewImages]}
