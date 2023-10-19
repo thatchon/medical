@@ -61,7 +61,7 @@ const ReportScreen = () => {
     return data.map(item => ({
       ...item,
       admissionDate: formatDate(item.admissionDate),
-      Images: item.Images ? item.Images.join(', ') : '' // จัดรูปแบบข้อมูล Images
+      Images: item.images ? item.images.join(', ') : '' // จัดรูปแบบข้อมูล Images
     }));
   };
 
