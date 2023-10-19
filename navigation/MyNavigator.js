@@ -40,6 +40,7 @@ function MainTabNavigator() {
       <Tab.Screen name="หน้าหลัก" component={HomeScreen}
         options={{
           headerShown: false,
+          title: 'หน้าหลัก',
           tabBarIcon: ({ focused, color, size }) => (
             <MaterialCommunityIcons name="home-variant" size={24} color={focused ? '#007BFF' : 'white'} />
           ),
@@ -198,7 +199,10 @@ function MyNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="SelectRole">
-        <Stack.Screen name="SelectRole" component={SelectRoleScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="SelectRole" component={SelectRoleScreen} options={{ 
+          headerShown: false,
+          title: 'เลือกบทบาท'
+          }} />
 
         <Stack.Screen name="Login" component={LoginScreen} options={{
           title: 'เข้าสู่ระบบ',
@@ -212,7 +216,10 @@ function MyNavigator() {
           },
         }} />
 
-        <Stack.Screen name="Home" component={MainTabNavigator} options={{ headerShown: false }} />
+        <Stack.Screen name="Home" component={MainTabNavigator} options={{ 
+          headerShown: false,
+          title: 'หน้าหลัก'
+          }} />
 
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{
           title: 'เปลี่ยนรหัสผ่าน',
