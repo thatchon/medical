@@ -400,7 +400,7 @@ function OpdScreen({ navigation }) {
               </>
             )}
             <Pressable
-              style={[styles.button, styles.buttonClose]}
+              style={[styles.button, styles.buttonCancel]}
               onPress={() => setModalVisible(!modalVisible)}
             >
               <Text style={styles.textStyle}>ปิดหน้าต่าง</Text>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, CheckBox, Platform, ScrollView } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, CheckBox, Platform, ScrollView} from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { db, auth } from '../../data/firebaseDB'
-import { getDocs, addDoc, collection, query, where, Timestamp } from "firebase/firestore";
-// import CheckBox from '@react-native-community/checkbox';
+import { db, auth, storage } from '../../data/firebaseDB'
+import { getDocs, addDoc, collection, query, where, Timestamp, updateDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 function AddProcedureScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -22,6 +22,29 @@ function AddProcedureScreen() {
   const [procedureLevel, setProcedureLevel] = useState(0);
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
+
+  const [uploadedImages, setUploadedImages] = useState([]);
+
+  const selectImages = (event) => {
+    const files = event.target.files;
+    if (files) {
+        const imagesArray = Array.from(files);
+        setUploadedImages(imagesArray);
+    }
+  }
+
+  const uploadImages = async (uploadedImages, docId) => {
+    const storageURLs = [];
+    const uploadPromises = uploadedImages.map(async (image) => {
+      const imageRef = ref(storage, `procedures_images/${docId}/${image.name}`);
+      await uploadBytes(imageRef, image);
+      const downloadURL = await getDownloadURL(imageRef);
+      storageURLs.push(downloadURL);
+    });
+  
+    await Promise.all(uploadPromises);
+    return storageURLs;
+  };
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
@@ -151,50 +174,53 @@ function AddProcedureScreen() {
         alert("โปรดเลือกเลเวล");
         return;
       }
+      // if (uploadedImages.length === 0) {
+      //   alert("กรุณาเลือกรูปภาพก่อนทำการบันทึก");
+      //   return;
+      // }
 
-      // Get the currently authenticated user
       const user = auth.currentUser;
-    
-      // Check if a user is authenticated
-      if (user) {
-        const { uid } = user; 
-        const timestamp = Timestamp.fromDate(selectedDate); // แปลง Date object เป็น Timestamp
-        // Add a new document with a generated ID to a collection
-        await addDoc(collection(db, "procedures"), {
-          admissionDate: timestamp,
-          createBy_id: uid, // User ID
-          hn: hn, // HN
-          procedureType: selectedProcedures,
-          remarks: remarks, // remarks
-          approvedByName: approvedByName,
-          status: status,
-          approvedById: approvedById,
-          procedureLevel: procedureLevel
-          // Add more fields as needed
-        });
-
-        // Clear the input fields after successfully saving data
-        setHN("");
-        setSelectedDate(new Date());
-        setSelectedProcedures("");
-        setRemarks("");
-        setProcedureLevel(null);
-
-        // Display a success message or perform any other action
-        alert("บันทึกข้อมูลสำเร็จ");
-      } else {
-        // Handle the case when no user is authenticated
+      if (!user) {
         alert("ไม่พบข้อมูลผู้ใช้");
+        return;
       }
+  
+      const timestamp = Timestamp.fromDate(selectedDate);
+  
+      // Step 1: Save patient data (excluding images) and retrieve the Document ID
+      const docRef = await addDoc(collection(db, "procedures"), {
+        admissionDate: timestamp,
+        createBy_id: user.uid,
+        hn: hn,
+        procedureType: selectedProcedures,
+        remarks: remarks,
+        approvedByName: approvedByName,
+        status: status,
+        approvedById: approvedById,
+        procedureLevel: procedureLevel,
+        images: [] // We'll store the image URLs in the next step
+      });
+  
+      // Step 2: Use the Document ID as a folder name for image uploads and then update image URLs in Firestore
+      const imageUrls = await uploadImages(uploadedImages, docRef.id);
+      await updateDoc(docRef, { images: imageUrls });
+  
+      // Clear the input fields and states
+      setHN("");
+      setSelectedDate(new Date());
+      setSelectedProcedures("");
+      setRemarks("");
+      setProcedureLevel(null);
+  
+      alert("บันทึกข้อมูลสำเร็จ");
     } catch (error) {
       console.error("Error adding document: ", error);
-      // Handle errors or display an error message
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };
 
   return (
-    // <ScrollView>
+    <ScrollView>
       <View style={styles.container}>
         <View style={{ marginBottom: 12 }}>
           <Text style={{
@@ -295,28 +321,6 @@ function AddProcedureScreen() {
           />
         </View>
 
-        {/* <View style={{
-          width: '70%',
-          height: 48,
-          borderColor: 'black',
-          borderWidth: 1,
-          borderRadius: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingLeft: 22
-        }}>
-          <TextInput
-            placeholder="เพิ่มการวินิฉัยอื่นๆ"
-
-            style={{
-              width: '100%'
-            }}
-          ></TextInput>
-
-
-        </View> */}
-
-
         <View style={{ marginBottom: 12, width: '70%', }}>
             <Text style={{
               fontSize: 24,
@@ -346,6 +350,14 @@ function AddProcedureScreen() {
           </View>
         </View>
 
+    {/* UI for image upload */}
+      <View style={styles.uploadContainer}>
+        <Text style={styles.uploadTitle}>อัปโหลดรูปภาพ (optional)</Text>
+        <View style={styles.dropzone}>
+          <input type="file" accept="image/*" multiple onChange={selectImages} />
+        </View>
+      </View>
+
         <TouchableOpacity
           style={{
             height: 48,
@@ -370,7 +382,7 @@ function AddProcedureScreen() {
           <Text style={{ fontSize: 20, color: 'white' }}>บันทึกข้อมูล</Text>
         </TouchableOpacity>
       </View>
-
+    </ScrollView>
   );
 }
 
@@ -399,7 +411,52 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5
-  }
+  },
+  previewImage: {
+    width: 100,
+    height: 100,
+    margin: 5,
+    borderRadius: 5,
+  },
+  uploadContainer: {
+    marginBottom: 16,
+  },
+  uploadTitle: {
+    fontSize: 24,
+    fontWeight: '400',
+    marginVertical: 8,
+    textAlign: 'center'
+  },
+  dropzone: {
+    height: 50,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row'
+  },
+  uploadedFileName: {
+    marginLeft: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalImage: {
+    width: '90%',
+    height: 'auto',
+    marginVertical: 10,
+    borderRadius: 10,
+  },
+  imageText: {
+    fontSize: 18,
+    marginTop: 10,
+    textAlign: 'center',
+    color: 'blue'
+  },
 });
 
 export default AddProcedureScreen;

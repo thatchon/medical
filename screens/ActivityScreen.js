@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from '../data/firebaseDB';
 import {
   Alert,
@@ -10,9 +10,11 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  Image,
+  Linking
 } from "react-native";
 import { useSelector } from "react-redux";
-import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 
 function ActivityScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,6 +24,8 @@ function ActivityScreen({ navigation }) {
   const [action, setAction] = useState(null);
   const currentUserUid = useSelector((state) => state.user.uid);
   const role = useSelector((state) => state.role);
+
+  const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const [isApproveAllModalVisible, setApproveAllModalVisible] = useState(false);
 
@@ -46,6 +50,10 @@ function ActivityScreen({ navigation }) {
     const year = date.getFullYear() + 543; // เปลี่ยนจาก ค.ศ. เป็น พ.ศ.
     return `${day} ${thaiMonths[month]} ${year}`;
   };
+
+  const viewImages = () => {
+    setImageModalVisible(true);
+  }
 
   const loadActivityData = async () => {
     try {
@@ -99,9 +107,6 @@ function ActivityScreen({ navigation }) {
   const handleAddData = () => {
     navigation.navigate("AddActivity");
   };
-  const handleActivityHistory = () => {
-    navigation.navigate("ActivityHistory")
-  }
 
   const handleApprove = async () => {
     try {
@@ -380,10 +385,58 @@ function ActivityScreen({ navigation }) {
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>Note/Reflection : </Text> {selectedActivity.note || "ไม่มี"}
                 </Text>
+                {selectedActivity.images && (
+                  <Pressable
+                    onPress={viewImages}
+                    style={[styles.button, styles.buttonViewImages]}
+                  >
+                    <Text style={styles.textStyle}>ดูรูปภาพ</Text>
+                  </Pressable>
+                )}
+
+                <Modal
+                  animationType="slide"
+                  transparent={true}
+                  visible={imageModalVisible}
+                  onRequestClose={() => {
+                    Alert.alert("Image viewer has been closed.");
+                    setImageModalVisible(!imageModalVisible);
+                  }}
+                >
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <View style={{ width: '70%', height: '70%', backgroundColor: 'white', borderRadius: 10 }}>
+                      <ScrollView>
+                        {selectedActivity?.images && selectedActivity.images.map((imageUrl, index) => {
+                          return (
+                            <View key={index} style={{ marginBottom: 10, borderColor: '#ccc', borderWidth: 1, padding: 10, borderRadius: 5 }}>
+                              <Image
+                                source={{ uri: imageUrl }}
+                                style={{ width: '100%', height: 200, resizeMode: 'contain', marginVertical: 10 }}
+                              />
+                              <Pressable
+                                style={{ backgroundColor: '#2196F3', padding: 5, borderRadius: 5, marginTop: 5 }}
+                                onPress={() => Linking.openURL(imageUrl)} // เปิด URL ในเบราว์เซอร์เริ่มต้น
+                              >
+                                <Text style={{ color: 'white', textAlign: 'center' }}>ดูลิ้งค์รูปภาพ</Text>
+                              </Pressable>
+                            </View>
+                          );
+                        })}
+                      </ScrollView>
+                      <Pressable
+                        style={[styles.button, styles.buttonClose]}
+                        onPress={() => setImageModalVisible(!imageModalVisible)}
+                      >
+                        <Text style={styles.textStyle}>ปิดหน้าต่าง</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+
               </>
             )}
             <Pressable
-              style={[styles.button, styles.buttonClose]}
+              style={[styles.button, styles.buttonCancel]}
               onPress={() => setModalVisible(!modalVisible)}
             >
               <Text style={styles.textStyle}>ปิดหน้าต่าง</Text>
@@ -393,33 +446,7 @@ function ActivityScreen({ navigation }) {
       </Modal>
       <View>
         {renderAddDataButton()}
-
       </View>
-      {/* <View>
-        <TouchableOpacity
-          onPress={handleActivityHistory}
-          style={{
-            height: 37,
-            width: 174,
-            marginTop: 20,
-            marginLeft: 50,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#05AB9F",
-            borderRadius: 59,
-            shadowColor: "#000",
-            shadowOffset: {
-              width: 0,
-              height: 2,
-            },
-            shadowOpacity: 0.25,
-            shadowRadius: 4,
-            elevation: 5,
-          }}
-        >
-          <Text style={{ fontSize: 22, color: "white" }}>ประวัติ</Text>
-        </TouchableOpacity>
-      </View> */}
     </View>
   );
 }
@@ -555,6 +582,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginHorizontal: 5  // เพิ่มระยะห่างระหว่างปุ่ม
   },
+  modalImageView: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    maxWidth: '90%',
+    maxHeight: '80%'
+  },
+  buttonViewImages: {
+    backgroundColor: "blue", // สีที่คุณต้องการ
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10
+  },
+  buttonClose: {
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 10,
+    elevation: 2,
+    alignSelf: 'center',
+    margin: 10
+  }
 });
 
 export default ActivityScreen;

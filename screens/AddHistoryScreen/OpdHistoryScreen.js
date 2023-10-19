@@ -262,6 +262,7 @@ function OpdHistoryScreen() {
     modalText: {
       marginBottom: 15,
       textAlign: "center",
+      fontSize: 16
     },
     centerView: {
       flex: 1,
@@ -287,6 +288,9 @@ function OpdHistoryScreen() {
       shadowRadius: 4,
       elevation: 5,
     },
+    buttonClose: {
+      backgroundColor: 'red'
+    }
   });
 
 

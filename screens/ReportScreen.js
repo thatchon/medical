@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { View, Text, Button, StyleSheet, Picker, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import { db } from '../data/firebaseDB';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
+import { AntDesign } from "@expo/vector-icons";
 
 const ReportScreen = () => {
   const currentUserUid = useSelector(state => state.user.uid);
@@ -93,23 +95,73 @@ const ReportScreen = () => {
     }
   };
 
-  return (
-    <div>
-      <div>
-        <label>Select File Format: </label>
-        <select value={fileFormat} onChange={(e) => setFileFormat(e.target.value)}>
-          <option value="csv">CSV</option>
-          <option value="xls">XLS</option>
-          <option value="xlsx">XLSX</option>
-        </select>
-      </div>
 
-      {/* ปุ่มสำหรับดาวน์โหลดข้อมูล */}
-      <div>
-        <button onClick={handleDownload}>Download</button>
-      </div>
-    </div>
+  return (
+    <View style={styles.reportContainer}>
+      <View style={styles.reportContent}>
+        <Text style={{ fontSize: 16 }}>Save As : </Text>
+        {/* เปลี่ยน <select> เป็น <Picker> ของ react-native */}
+        <Picker
+              selectedValue={fileFormat}
+              style={styles.pickerStyle}
+              onValueChange={(itemValue, itemIndex) => setFileFormat(itemValue)}
+          >
+          <Picker.Item label="CSV" value="csv" />
+          <Picker.Item label="XLS" value="xls" />
+          <Picker.Item label="XLSX" value="xlsx" />
+        </Picker>
+
+        <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
+          <AntDesign name="download" size={16} color="white" />
+          <Text style={styles.downloadText}>Download</Text>
+      </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
+const styles = StyleSheet.create({
+  reportContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 121,
+    width: 766,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 5,
+    marginTop: 20,
+    marginLeft: 25
+  },
+  reportContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2196F3', // สีฟ้า
+    padding: 5,
+    borderRadius: 16,
+    marginLeft: 20
+  },
+  downloadText: {
+      marginLeft: 5, // เพิ่มระยะห่างระหว่างไอคอนกับข้อความ
+      marginRight: 10,
+      color: 'white', // สีข้อความเป็นสีขาว
+  },
+  pickerStyle: {
+    textAlign: 'center', // ปรับแต่งให้ข้อความอยู่ตรงกลาง
+    shadowColor: '#000',
+    marginLeft: 10,
+    width: 130,
+    shadowOffset: {
+        width: 0,
+        height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+},
+});
 export default ReportScreen;

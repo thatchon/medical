@@ -6,12 +6,14 @@ import {
   StyleSheet,
   ScrollView,
   Modal,
-  Pressable
+  Pressable,
+  Image,
+  Linking
 } from "react-native";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from '../../data/firebaseDB';
 import { useSelector } from "react-redux";
-import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
 
 function ProcedureHistoryScreen() {
     const currentUserUid = useSelector((state) => state.user.uid);
@@ -20,7 +22,8 @@ function ProcedureHistoryScreen() {
     const [filterStatus, setFilterStatus] = useState('approved');
     const [selectedProcedure, setSelectedProcedure] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
-  
+    const [imageModalVisible, setImageModalVisible] = useState(false);
+
     const thaiMonths = [
       'มกราคม',
       'กุมภาพันธ์',
@@ -42,6 +45,10 @@ function ProcedureHistoryScreen() {
       const year = date.getFullYear() + 543; // เปลี่ยนจาก ค.ศ. เป็น พ.ศ.
       return `${day} ${thaiMonths[month]} ${year}`;
     };
+
+    const viewImages = () => {
+      setImageModalVisible(true);
+    }
 
     const handleCardPress = (procedure) => {
       setSelectedProcedure(procedure);
@@ -188,7 +195,55 @@ function ProcedureHistoryScreen() {
                 </Text>
                 <Text style={styles.modalText}>
                   <Text style={{ fontWeight: "bold" }}>หมายเหตุ : </Text> {selectedProcedure.remarks || "ไม่มี"}
-                  </Text>
+                </Text>
+                {selectedProcedure.images && (
+                  <Pressable
+                    onPress={viewImages}
+                    style={[styles.button, styles.buttonViewImages]}
+                  >
+                    <Text style={styles.textStyle}>ดูรูปภาพ</Text>
+                  </Pressable>
+                )}
+
+                <Modal
+                  animationType="slide"
+                  transparent={true}
+                  visible={imageModalVisible}
+                  onRequestClose={() => {
+                    Alert.alert("Image viewer has been closed.");
+                    setImageModalVisible(!imageModalVisible);
+                  }}
+                >
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <View style={{ width: '70%', height: '70%', backgroundColor: 'white', borderRadius: 10 }}>
+                      <ScrollView>
+                        {selectedProcedure?.images && selectedProcedure.images.map((imageUrl, index) => {
+                          return (
+                            <View key={index} style={{ marginBottom: 10, borderColor: '#ccc', borderWidth: 1, padding: 10, borderRadius: 5 }}>
+                              <Image
+                                source={{ uri: imageUrl }}
+                                style={{ width: '100%', height: 200, resizeMode: 'contain', marginVertical: 10 }}
+                              />
+                              <Pressable
+                                style={{ backgroundColor: '#2196F3', padding: 5, borderRadius: 5, marginTop: 5 }}
+                                onPress={() => Linking.openURL(imageUrl)} // เปิด URL ในเบราว์เซอร์เริ่มต้น
+                              >
+                                <Text style={{ color: 'white', textAlign: 'center' }}>ดูลิ้งค์รูปภาพ</Text>
+                              </Pressable>
+                            </View>
+                          );
+                        })}
+                      </ScrollView>
+                      <Pressable
+                        style={[styles.button, styles.buttonClose]}
+                        onPress={() => setImageModalVisible(!imageModalVisible)}
+                      >
+                        <Text style={styles.textStyle}>ปิดหน้าต่าง</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+
               </>
             )}
             <Pressable
@@ -216,7 +271,7 @@ function ProcedureHistoryScreen() {
     button: {
       backgroundColor: '#05AB9F',
       padding: 10,
-      marginBottom: 20,
+      marginBottom: 10,
       borderRadius: 5,
     },
     buttonApproved: {
@@ -263,6 +318,7 @@ function ProcedureHistoryScreen() {
     modalText: {
       marginBottom: 15,
       textAlign: "center",
+      fontSize: 16
     },
     centerView: {
       flex: 1,
@@ -288,6 +344,39 @@ function ProcedureHistoryScreen() {
       shadowRadius: 4,
       elevation: 5,
     },
+    buttonCancel: {
+      backgroundColor: 'red'
+    },
+    modalImageView: {
+      backgroundColor: "white",
+      padding: 20,
+      borderRadius: 20,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+      maxWidth: '90%',
+      maxHeight: '80%'
+    },
+    buttonViewImages: {
+      backgroundColor: "blue", // สีที่คุณต้องการ
+      padding: 10,
+      borderRadius: 10,
+      marginTop: 10
+    },
+    buttonClose: {
+      backgroundColor: 'red',
+      padding: 10,
+      borderRadius: 10,
+      elevation: 2,
+      alignSelf: 'center',
+      margin: 10
+    }
   });
 
 

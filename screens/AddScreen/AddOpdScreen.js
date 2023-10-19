@@ -101,6 +101,7 @@ function AddOpdScreen() {
       return null;
     }
 };
+
   const onSelectTeacher = (selectedTeacherId) => {
     const selectedTeacher = teachers.find(teacher => teacher.key === selectedTeacherId);
     // console.log(selectedTeacher)
